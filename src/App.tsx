@@ -206,9 +206,9 @@ function App() {
 
   return (
     <div className="h-screen bg-md-background text-md-on-background font-sans flex flex-col overflow-hidden">
-      {/* Header - Center Aligned Top App Bar */}
+      {/* Header - Top App Bar */}
       <header className="sticky top-0 z-50 bg-md-surface/80 backdrop-blur-md border-b border-md-outline-variant/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="px-4 h-16 flex items-center justify-between">
             {/* Leading Icon/Logo */}
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-md-primary-container text-md-on-primary-container rounded-full flex items-center justify-center">

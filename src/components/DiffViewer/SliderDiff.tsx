@@ -17,7 +17,7 @@ interface SegmentedButtonProps {
 
 export const SegmentedButton: React.FC<SegmentedButtonProps> = ({ options, value, onChange, className }) => {
     return (
-        <div className={cn("inline-flex h-10 rounded-full border border-md-outline bg-transparent p-0 overflow-hidden", className)}>
+        <div className={cn("inline-flex rounded-2xl border border-md-outline bg-transparent p-0 overflow-hidden", className)}>
             {options.map((option) => {
                 const isSelected = value === option.value;
                 return (
@@ -25,15 +25,14 @@ export const SegmentedButton: React.FC<SegmentedButtonProps> = ({ options, value
                         key={option.value}
                         onClick={() => onChange(option.value)}
                         className={cn(
-                            "flex items-center gap-2 px-4 text-sm font-medium transition-colors border-r border-md-outline last:border-r-0 focus:outline-none relative overflow-hidden",
-                            isSelected 
-                                ? "bg-md-secondary-container text-md-on-secondary-container" 
+                            "flex flex-col items-center justify-center gap-1 px-5 py-2 text-xs font-medium transition-colors border-r border-md-outline last:border-r-0 focus:outline-none relative overflow-hidden min-w-[80px]",
+                            isSelected
+                                ? "bg-md-secondary-container text-md-on-secondary-container"
                                 : "bg-transparent text-md-on-surface-variant hover:bg-md-on-surface/10"
                         )}
                     >
-                        {option.icon && <option.icon size={18} />}
-                        {option.label}
-                        {/* Selected Check Icon placeholder if strict MD3, but color change is enough for now */}
+                        {option.icon && <option.icon size={20} />}
+                        <span>{option.label}</span>
                     </button>
                 );
             })}

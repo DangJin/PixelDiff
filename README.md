@@ -16,7 +16,7 @@ A visual comparison tool for designers and developers to quickly identify differ
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 
-![PixelDiff Screenshot](./public/screenshot.png)
+![PixelDiff Screenshot](./assets/screenshot.png)
 
 </div>
 

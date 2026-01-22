@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  /* Material Design 3 Color System (Baseline / Purple based) */
+  --color-md-primary: #6750A4;
+  --color-md-on-primary: #FFFFFF;
+  --color-md-primary-container: #EADDFF;
+  --color-md-on-primary-container: #21005D;
+
+  --color-md-secondary: #625B71;
+  --color-md-on-secondary: #FFFFFF;
+  --color-md-secondary-container: #E8DEF8;
+  --color-md-on-secondary-container: #1D192B;
+
+  --color-md-tertiary: #7D5260;
+  --color-md-on-tertiary: #FFFFFF;
+  --color-md-tertiary-container: #FFD8E4;
+  --color-md-on-tertiary-container: #31111D;
+
+  --color-md-error: #B3261E;
+  --color-md-on-error: #FFFFFF;
+  --color-md-error-container: #F9DEDC;
+  --color-md-on-error-container: #410E0B;
+
+  --color-md-background: #FEF7FF;
+  --color-md-on-background: #1D1B20;
+
+  --color-md-surface: #FEF7FF;
+  --color-md-on-surface: #1D1B20;
+  
+  --color-md-surface-variant: #E7E0EC;
+  --color-md-on-surface-variant: #49454F;
+  
+  --color-md-outline: #79747E;
+  --color-md-outline-variant: #CAC4D0;
+
+  --color-md-surface-container-lowest: #FFFFFF;
+  --color-md-surface-container-low: #F7F2FA;
+  --color-md-surface-container: #F3EDF7;
+  --color-md-surface-container-high: #ECE6F0;
+  --color-md-surface-container-highest: #E6E0E9;
+
+  /* Typography - Using system sans for simplicity but mapping to MD3 scale conceptually */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+  /* Elevation (Shadows) */
+  --shadow-md-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --shadow-md-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Global Styles */
+body {
+  background-color: var(--color-md-background);
+  color: var(--color-md-on-background);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-md-outline-variant); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-md-outline); 
+}

@@ -1,15 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ImageDropzone } from './components/ImageDropzone';
-import { SliderDiff, SegmentedButton } from './components/DiffViewer/SliderDiff';
+import { VideoDropzone } from './components/VideoDropzone';
+import { SliderDiff } from './components/DiffViewer/SliderDiff';
 import { SideBySideDiff } from './components/DiffViewer/SideBySideDiff';
+import { VideoDiff } from './components/DiffViewer/VideoDiff';
+import { VideoSliderDiff } from './components/DiffViewer/VideoSliderDiff';
 import { ZoomToolbar, ZOOM_STEP, MIN_ZOOM, MAX_ZOOM } from './components/DiffViewer/ZoomToolbar';
 import { AnnotationToolbar } from './components/Annotation/AnnotationToolbar';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
+import { KeyboardShortcutsDialog } from './components/ui/KeyboardShortcutsDialog';
+import { RecentDiffsDialog } from './components/ui/RecentDiffsDialog';
+import { RecentDiffsList } from './components/ui/RecentDiffsList';
 import type { Annotation, AnnotationTool } from './types/annotation';
 import { DEFAULT_ANNOTATION_COLOR } from './types/annotation';
-import { Columns, GitCompare, Trash2, Github } from 'lucide-react';
+import { GitCompare, Trash2, Github, Keyboard, History } from 'lucide-react';
+import { ContentModeSelector } from './components/ContentModeSelector';
+import { ViewModeSelector } from './components/ViewModeSelector';
 import { Button, IconButton } from './components/ui/Button';
+import { useRecentDiffs } from './hooks';
 
+type ContentMode = 'image' | 'video';
 type ViewMode = 'slider' | 'side-by-side';
 
 interface ImageSize {
@@ -18,10 +28,23 @@ interface ImageSize {
 }
 
 function App() {
+  // 顶层模式：图片 or 视频
+  const [contentMode, setContentMode] = useState<ContentMode>('image');
+
+  // 图片状态
   const [beforeImage, setBeforeImage] = useState<string | null>(null);
   const [afterImage, setAfterImage] = useState<string | null>(null);
   const [beforeSize, setBeforeSize] = useState<ImageSize | null>(null);
   const [afterSize, setAfterSize] = useState<ImageSize | null>(null);
+  const [beforeImageHandle, setBeforeImageHandle] = useState<FileSystemFileHandle | null>(null);
+  const [afterImageHandle, setAfterImageHandle] = useState<FileSystemFileHandle | null>(null);
+
+  // 视频状态
+  const [beforeVideo, setBeforeVideo] = useState<string | null>(null);
+  const [afterVideo, setAfterVideo] = useState<string | null>(null);
+  const [beforeVideoHandle, setBeforeVideoHandle] = useState<FileSystemFileHandle | null>(null);
+  const [afterVideoHandle, setAfterVideoHandle] = useState<FileSystemFileHandle | null>(null);
+
   const [mode, setMode] = useState<ViewMode>('slider');
   const [zoom, setZoom] = useState(1);
 
@@ -35,6 +58,18 @@ function App() {
   // 模式切换确认对话框
   const [pendingMode, setPendingMode] = useState<ViewMode | null>(null);
   const [showModeConfirm, setShowModeConfirm] = useState(false);
+
+  // 清空确认对话框
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // 快捷键帮助弹窗
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // 历史记录
+  const [showRecentDiffs, setShowRecentDiffs] = useState(false);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
+  const { recentDiffs, addRecentDiff, getFileData, removeRecentDiff, clearAllRecentDiffs } = useRecentDiffs();
+  const hasAddedToRecent = useRef(false);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
@@ -122,7 +157,7 @@ function App() {
     setPendingMode(null);
   }, []);
 
-  // 键盘快捷键：A 切换箭头，R 切换矩形
+  // 键盘快捷键：V 选择，A 箭头，R 矩形
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 如果在输入框中，不处理快捷键
@@ -130,11 +165,17 @@ function App() {
         return;
       }
 
-      // 只有在有图片时才处理快捷键
-      if (!beforeImage || !afterImage) return;
+      // 只有在比较模式下才处理快捷键（图片或视频都已上传）
+      const inCompareMode = (contentMode === 'image' && beforeImage && afterImage) ||
+                           (contentMode === 'video' && beforeVideo && afterVideo);
+      if (!inCompareMode) return;
 
       const key = e.key.toLowerCase();
-      if (key === 'a') {
+      if (key === 'v') {
+        e.preventDefault();
+        setPrimaryTool('select');
+        setCurrentTool('select');
+      } else if (key === 'a') {
         e.preventDefault();
         setPrimaryTool('arrow');
         setCurrentTool('arrow');
@@ -147,21 +188,23 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [beforeImage, afterImage]);
+  }, [contentMode, beforeImage, afterImage, beforeVideo, afterVideo]);
 
   // Cleanup object URLs on unmount or change
   useEffect(() => {
     return () => {
       if (beforeImage) URL.revokeObjectURL(beforeImage);
       if (afterImage) URL.revokeObjectURL(afterImage);
+      if (beforeVideo) URL.revokeObjectURL(beforeVideo);
+      if (afterVideo) URL.revokeObjectURL(afterVideo);
     };
   }, []);
 
-  const handleImageUpload = (file: File, type: 'before' | 'after') => {
+  const handleImageUpload = (file: File, type: 'before' | 'after', handle?: FileSystemFileHandle) => {
     const url = URL.createObjectURL(file);
 
     // 获取图片尺寸
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       const size = { width: img.naturalWidth, height: img.naturalHeight };
       if (type === 'before') {
@@ -175,26 +218,157 @@ function App() {
     if (type === 'before') {
       if (beforeImage) URL.revokeObjectURL(beforeImage);
       setBeforeImage(url);
+      setBeforeImageHandle(handle || null);
     } else {
       if (afterImage) URL.revokeObjectURL(afterImage);
       setAfterImage(url);
+      setAfterImageHandle(handle || null);
     }
   };
 
-  const handleClear = () => {
-    if (beforeImage) URL.revokeObjectURL(beforeImage);
-    if (afterImage) URL.revokeObjectURL(afterImage);
-    setBeforeImage(null);
-    setAfterImage(null);
-    setBeforeSize(null);
-    setAfterSize(null);
-    // 清除标注
-    setAnnotations([]);
-    setSelectedAnnotationId(null);
-    setCurrentTool('select');
+  const handleVideoUpload = (file: File, type: 'before' | 'after', handle?: FileSystemFileHandle) => {
+    const url = URL.createObjectURL(file);
+
+    if (type === 'before') {
+      if (beforeVideo) URL.revokeObjectURL(beforeVideo);
+      setBeforeVideo(url);
+      setBeforeVideoHandle(handle || null);
+    } else {
+      if (afterVideo) URL.revokeObjectURL(afterVideo);
+      setAfterVideo(url);
+      setAfterVideoHandle(handle || null);
+    }
+  };
+
+  // 显示清空确认对话框
+  const handleClearClick = () => {
+    setShowClearConfirm(true);
+  };
+
+  // 确认清空
+  const handleConfirmClear = () => {
+    if (contentMode === 'image') {
+      if (beforeImage) URL.revokeObjectURL(beforeImage);
+      if (afterImage) URL.revokeObjectURL(afterImage);
+      setBeforeImage(null);
+      setAfterImage(null);
+      setBeforeSize(null);
+      setAfterSize(null);
+      // 清除标注
+      setAnnotations([]);
+      setSelectedAnnotationId(null);
+      setCurrentTool('select');
+    } else {
+      if (beforeVideo) URL.revokeObjectURL(beforeVideo);
+      if (afterVideo) URL.revokeObjectURL(afterVideo);
+      setBeforeVideo(null);
+      setAfterVideo(null);
+      // 清除标注
+      setAnnotations([]);
+      setSelectedAnnotationId(null);
+      setCurrentTool('select');
+    }
+    setShowClearConfirm(false);
+  };
+
+  // 取消清空
+  const handleCancelClear = () => {
+    setShowClearConfirm(false);
   };
 
   const hasBothImages = beforeImage && afterImage;
+  const hasBothVideos = beforeVideo && afterVideo;
+  const hasAnyContent = contentMode === 'image'
+    ? (beforeImage || afterImage)
+    : (beforeVideo || afterVideo);
+
+  // 从历史记录加载
+  const handleRecentSelect = useCallback(async (item: import('./hooks/useRecentDiffs').RecentDiffItem) => {
+    setIsLoadingRecent(true);
+    setShowRecentDiffs(false);
+
+    try {
+      const fileData = await getFileData(item.id);
+      if (!fileData) {
+        alert('Failed to load files. The original files may have been moved or deleted.');
+        setIsLoadingRecent(false);
+        return;
+      }
+
+      // 切换到对应模式
+      setContentMode(item.contentMode);
+
+      // 清除现有内容
+      if (beforeImage) URL.revokeObjectURL(beforeImage);
+      if (afterImage) URL.revokeObjectURL(afterImage);
+      if (beforeVideo) URL.revokeObjectURL(beforeVideo);
+      if (afterVideo) URL.revokeObjectURL(afterVideo);
+
+      // 设置新内容
+      if (item.contentMode === 'image') {
+        setBeforeImage(fileData.beforeUrl);
+        setAfterImage(fileData.afterUrl);
+        setBeforeImageHandle(fileData.beforeHandle);
+        setAfterImageHandle(fileData.afterHandle);
+        setBeforeVideo(null);
+        setAfterVideo(null);
+        setBeforeVideoHandle(null);
+        setAfterVideoHandle(null);
+
+        // 获取图片尺寸
+        const loadImageSize = (src: string): Promise<ImageSize> => {
+          return new Promise((resolve) => {
+            const img = new window.Image();
+            img.onload = () => {
+              resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            };
+            img.src = src;
+          });
+        };
+
+        const [beforeSizeResult, afterSizeResult] = await Promise.all([
+          loadImageSize(fileData.beforeUrl),
+          loadImageSize(fileData.afterUrl),
+        ]);
+        setBeforeSize(beforeSizeResult);
+        setAfterSize(afterSizeResult);
+      } else {
+        setBeforeVideo(fileData.beforeUrl);
+        setAfterVideo(fileData.afterUrl);
+        setBeforeVideoHandle(fileData.beforeHandle);
+        setAfterVideoHandle(fileData.afterHandle);
+        setBeforeImage(null);
+        setAfterImage(null);
+        setBeforeImageHandle(null);
+        setAfterImageHandle(null);
+        setBeforeSize(null);
+        setAfterSize(null);
+      }
+
+      // 清除标注
+      setAnnotations([]);
+      setSelectedAnnotationId(null);
+      setCurrentTool('select');
+
+      // 重置标记，允许下次保存到历史记录
+      hasAddedToRecent.current = true; // 已经在历史记录中，不需要重新添加
+    } finally {
+      setIsLoadingRecent(false);
+    }
+  }, [getFileData, beforeImage, afterImage, beforeVideo, afterVideo]);
+
+  // 进入对比模式时保存到历史记录
+  useEffect(() => {
+    if (contentMode === 'image' && hasBothImages && !hasAddedToRecent.current) {
+      hasAddedToRecent.current = true;
+      addRecentDiff('image', beforeImage, afterImage, beforeImageHandle || undefined, afterImageHandle || undefined);
+    } else if (contentMode === 'video' && hasBothVideos && !hasAddedToRecent.current) {
+      hasAddedToRecent.current = true;
+      addRecentDiff('video', beforeVideo, afterVideo, beforeVideoHandle || undefined, afterVideoHandle || undefined);
+    } else if (!hasBothImages && !hasBothVideos) {
+      hasAddedToRecent.current = false;
+    }
+  }, [contentMode, hasBothImages, hasBothVideos, beforeImage, afterImage, beforeVideo, afterVideo, beforeImageHandle, afterImageHandle, beforeVideoHandle, afterVideoHandle, addRecentDiff]);
 
   // 检测尺寸是否不同
   const sizeMismatch = beforeSize && afterSize &&
@@ -219,163 +393,341 @@ function App() {
               </h1>
            </div>
            
-           {/* Center Content (Title or Actions) */}
+           {/* Center Content - Compact View Mode Toggle */}
            <div className="flex-1 flex justify-center">
-                {hasBothImages && (
-                    <SegmentedButton
-                        value={mode}
-                        onChange={(v) => handleModeChange(v as ViewMode)}
-                        options={[
-                            { value: 'slider', label: 'Slider', icon: GitCompare },
-                            { value: 'side-by-side', label: 'Side by Side', icon: Columns },
-                        ]}
-                    />
+                {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && (
+                    <ViewModeSelector value={mode} onChange={handleModeChange} />
                 )}
            </div>
 
            {/* Trailing Actions */}
            <div className="flex items-center gap-2">
-             <IconButton 
-                variant="text" 
-                icon={Github} 
-                onClick={() => window.open('https://github.com', '_blank')}
-                title="View on GitHub"
-             />
-             {(beforeImage || afterImage) && (
-                <Button 
-                    variant="text" 
-                    label="Clear All" 
-                    icon={Trash2} 
-                    onClick={handleClear}
+             {/* Clear All - only show when has content */}
+             {hasAnyContent && (
+                <Button
+                    variant="text"
+                    label="Clear All"
+                    icon={Trash2}
+                    onClick={handleClearClick}
                     className="hidden sm:flex text-md-error hover:bg-md-error/10"
                 />
              )}
-              {(beforeImage || afterImage) && (
-                 <IconButton 
-                 variant="filled" 
-                 icon={Trash2} 
-                 onClick={handleClear}
-                 className="sm:hidden bg-md-error-container text-md-on-error-container hover:bg-md-error-container/80"
-              />
-              )}
+             {hasAnyContent && (
+                <IconButton
+                   variant="filled"
+                   icon={Trash2}
+                   onClick={handleClearClick}
+                   className="sm:hidden bg-md-error-container text-md-on-error-container hover:bg-md-error-container/80"
+                />
+             )}
+             {/* Recent Diffs */}
+             <IconButton
+                variant="text"
+                icon={History}
+                onClick={() => setShowRecentDiffs(true)}
+                title="Recent Comparisons"
+             />
+             {/* Keyboard Shortcuts */}
+             <IconButton
+                variant="text"
+                icon={Keyboard}
+                onClick={() => setShowShortcuts(true)}
+                title="Keyboard Shortcuts"
+             />
+             {/* GitHub - auxiliary link, placed last */}
+             <IconButton
+                variant="text"
+                icon={Github}
+                onClick={() => window.open('https://github.com/DangJin/PixelDiff', '_blank')}
+                title="View on GitHub"
+             />
            </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden min-h-0">
-          {hasBothImages ? (
-             <div className="flex-1 flex flex-col min-h-0 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
-               {/* Diff 画布区域 */}
-               <div className="flex-1 overflow-hidden relative">
-                 {mode === 'slider' ? (
-                   <SliderDiff
-                     beforeImage={beforeImage}
-                     afterImage={afterImage}
-                     zoom={zoom}
-                     hasTopTip={!!sizeMismatch}
-                     annotations={annotations}
-                     currentTool={currentTool}
-                     currentColor={currentColor}
-                     selectedAnnotationId={selectedAnnotationId}
-                     onAnnotationAdd={handleAnnotationAdd}
-                     onAnnotationSelect={handleAnnotationSelectWithRestore}
-                     onDeleteSelected={handleDeleteSelected}
-                     onToolChange={setCurrentTool}
-                     onAnnotationHover={handleAnnotationHover}
-                   />
-                 ) : (
-                   <SideBySideDiff
-                     beforeImage={beforeImage}
-                     afterImage={afterImage}
-                     zoom={zoom}
-                     beforeSize={beforeSize}
-                     afterSize={afterSize}
-                     hasTopTip={!!sizeMismatch}
-                     annotations={annotations}
-                     currentTool={currentTool}
-                     currentColor={currentColor}
-                     selectedAnnotationId={selectedAnnotationId}
-                     onAnnotationAdd={handleAnnotationAdd}
-                     onAnnotationSelect={handleAnnotationSelectWithRestore}
-                     onDeleteSelected={handleDeleteSelected}
-                     onToolChange={setCurrentTool}
-                     onAnnotationHover={handleAnnotationHover}
-                   />
-                 )}
-               </div>
+          {/* Image Mode */}
+          {contentMode === 'image' && (
+            <>
+              {hasBothImages ? (
+                <div className="flex-1 flex flex-col min-h-0 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {/* Diff 画布区域 */}
+                  <div className="flex-1 overflow-hidden relative">
+                    {mode === 'slider' ? (
+                      <SliderDiff
+                        beforeImage={beforeImage}
+                        afterImage={afterImage}
+                        zoom={zoom}
+                        beforeSize={beforeSize}
+                        afterSize={afterSize}
+                        hasTopTip={!!sizeMismatch}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    ) : (
+                      <SideBySideDiff
+                        beforeImage={beforeImage}
+                        afterImage={afterImage}
+                        zoom={zoom}
+                        beforeSize={beforeSize}
+                        afterSize={afterSize}
+                        hasTopTip={!!sizeMismatch}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    )}
+                  </div>
 
-               {/* 固定的尺寸提示 - 顶部 */}
-               {sizeMismatch && (
-                 <div className={`absolute top-0 left-0 right-0 z-20 border-b border-md-outline-variant px-4 py-2 flex items-center justify-center gap-4 backdrop-blur-sm ${aspectRatioMatch ? 'bg-md-tertiary-container/80' : 'bg-md-error-container/80'}`}>
-                   <div className={`text-sm ${aspectRatioMatch ? 'text-md-on-tertiary-container' : 'text-md-on-error-container'}`}>
-                     <span className="font-medium">
-                       {aspectRatioMatch ? '尺寸不同（比例相同，已自动对齐）：' : '⚠️ 宽高比不同，Slider 比较可能不准确：'}
-                     </span>
-                     <span className="ml-2">Before {beforeSize?.width}×{beforeSize?.height}</span>
-                     <span className="mx-2">→</span>
-                     <span>After {afterSize?.width}×{afterSize?.height}</span>
-                   </div>
-                 </div>
-               )}
+                  {/* 固定的尺寸提示 - 顶部 */}
+                  {sizeMismatch && (
+                    <div className={`absolute top-0 left-0 right-0 z-20 border-b border-md-outline-variant px-4 py-2 flex items-center justify-center gap-4 backdrop-blur-sm ${aspectRatioMatch ? 'bg-md-tertiary-container/80' : 'bg-md-error-container/80'}`}>
+                      <div className={`text-sm ${aspectRatioMatch ? 'text-md-on-tertiary-container' : 'text-md-on-error-container'}`}>
+                        <span className="font-medium">
+                          {aspectRatioMatch ? '尺寸不同（比例相同，已自动对齐）：' : '⚠️ 宽高比不同，Slider 比较可能不准确：'}
+                        </span>
+                        <span className="ml-2">Before {beforeSize?.width}×{beforeSize?.height}</span>
+                        <span className="mx-2">→</span>
+                        <span>After {afterSize?.width}×{afterSize?.height}</span>
+                      </div>
+                    </div>
+                  )}
 
-               {/* 标注工具栏 - 左侧 */}
-               <AnnotationToolbar
-                 currentTool={primaryTool}
-                 currentColor={currentColor}
-                 onToolChange={handleToolbarToolChange}
-                 onColorChange={setCurrentColor}
-                 onDeleteSelected={handleDeleteSelected}
-                 hasSelection={!!selectedAnnotationId}
-               />
-
-               {/* 固定的缩放工具条 - 底部 */}
-               <ZoomToolbar
-                 zoom={zoom}
-                 onZoomIn={handleZoomIn}
-                 onZoomOut={handleZoomOut}
-                 onZoomReset={handleZoomReset}
-               />
-             </div>
-          ) : (
-             <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[500px]">
-                  <ImageDropzone
-                    label="Original / Before"
-                    image={beforeImage}
-                    onImageUpload={(f) => handleImageUpload(f, 'before')}
-                    onClear={() => {
-                        if (beforeImage) URL.revokeObjectURL(beforeImage);
-                        setBeforeImage(null);
-                        setBeforeSize(null);
-                    }}
-                    className="shadow-md-1 hover:shadow-md-3"
+                  {/* 标注工具栏 - 左侧 */}
+                  <AnnotationToolbar
+                    currentTool={primaryTool}
+                    currentColor={currentColor}
+                    onToolChange={handleToolbarToolChange}
+                    onColorChange={setCurrentColor}
+                    onDeleteSelected={handleDeleteSelected}
+                    hasSelection={!!selectedAnnotationId}
                   />
-                  <ImageDropzone
-                    label="Modified / After"
-                    image={afterImage}
-                    onImageUpload={(f) => handleImageUpload(f, 'after')}
-                    onClear={() => {
-                        if (afterImage) URL.revokeObjectURL(afterImage);
-                        setAfterImage(null);
-                        setAfterSize(null);
-                    }}
-                     className="shadow-md-1 hover:shadow-md-3"
+
+                  {/* 固定的缩放工具条 - 底部 */}
+                  <ZoomToolbar
+                    zoom={zoom}
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                    onZoomReset={handleZoomReset}
                   />
                 </div>
-             </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+                  {/* Hero Section */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
+                      Spot Every Difference, Pixel by Pixel
+                    </h2>
+                    <p className="text-md-on-surface-variant max-w-lg mx-auto mb-6">
+                      Compare images or videos across different versions, resolutions, or formats.
+                      Ideal for design reviews, QA testing, and visual regression checks.
+                    </p>
+                    <ContentModeSelector value={contentMode} onChange={setContentMode} />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                    <ImageDropzone
+                      label="Original / Before"
+                      image={beforeImage}
+                      onImageUpload={(f, h) => handleImageUpload(f, 'before', h)}
+                      onClear={() => {
+                          if (beforeImage) URL.revokeObjectURL(beforeImage);
+                          setBeforeImage(null);
+                          setBeforeSize(null);
+                          setBeforeImageHandle(null);
+                      }}
+                      className="shadow-md-1 hover:shadow-md-3"
+                    />
+                    <ImageDropzone
+                      label="Modified / After"
+                      image={afterImage}
+                      onImageUpload={(f, h) => handleImageUpload(f, 'after', h)}
+                      onClear={() => {
+                          if (afterImage) URL.revokeObjectURL(afterImage);
+                          setAfterImage(null);
+                          setAfterSize(null);
+                          setAfterImageHandle(null);
+                      }}
+                      className="shadow-md-1 hover:shadow-md-3"
+                    />
+                  </div>
+
+                  {/* Recent Comparisons */}
+                  <RecentDiffsList
+                    recentDiffs={recentDiffs.filter(item => item.contentMode === 'image')}
+                    onSelect={handleRecentSelect}
+                    onRemove={removeRecentDiff}
+                    onClearAll={clearAllRecentDiffs}
+                    isLoading={isLoadingRecent}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Video Mode */}
+          {contentMode === 'video' && (
+            <>
+              {hasBothVideos ? (
+                <div className="flex-1 flex flex-col min-h-0 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {/* Video Diff 区域 */}
+                  <div className="flex-1 overflow-hidden relative">
+                    {mode === 'slider' ? (
+                      <VideoSliderDiff
+                        beforeVideo={beforeVideo}
+                        afterVideo={afterVideo}
+                        zoom={zoom}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onToolSelect={handleToolbarToolChange}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    ) : (
+                      <VideoDiff
+                        beforeVideo={beforeVideo}
+                        afterVideo={afterVideo}
+                        zoom={zoom}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onToolSelect={handleToolbarToolChange}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    )}
+                  </div>
+
+                  {/* 标注工具栏 - 左侧 */}
+                  <AnnotationToolbar
+                    currentTool={primaryTool}
+                    currentColor={currentColor}
+                    onToolChange={handleToolbarToolChange}
+                    onColorChange={setCurrentColor}
+                    onDeleteSelected={handleDeleteSelected}
+                    hasSelection={!!selectedAnnotationId}
+                  />
+
+                  {/* 固定的缩放工具条 - 底部 */}
+                  <ZoomToolbar
+                    zoom={zoom}
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                    onZoomReset={handleZoomReset}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+                  {/* Hero Section */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
+                      Spot Every Difference, Pixel by Pixel
+                    </h2>
+                    <p className="text-md-on-surface-variant max-w-lg mx-auto mb-6">
+                      Compare images or videos across different versions, resolutions, or formats.
+                      Ideal for design reviews, QA testing, and visual regression checks.
+                    </p>
+                    <ContentModeSelector value={contentMode} onChange={setContentMode} />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                    <VideoDropzone
+                      label="Original / Before"
+                      video={beforeVideo}
+                      onVideoUpload={(f, h) => handleVideoUpload(f, 'before', h)}
+                      onClear={() => {
+                          if (beforeVideo) URL.revokeObjectURL(beforeVideo);
+                          setBeforeVideo(null);
+                          setBeforeVideoHandle(null);
+                      }}
+                      className="shadow-md-1 hover:shadow-md-3"
+                    />
+                    <VideoDropzone
+                      label="Modified / After"
+                      video={afterVideo}
+                      onVideoUpload={(f, h) => handleVideoUpload(f, 'after', h)}
+                      onClear={() => {
+                          if (afterVideo) URL.revokeObjectURL(afterVideo);
+                          setAfterVideo(null);
+                          setAfterVideoHandle(null);
+                      }}
+                      className="shadow-md-1 hover:shadow-md-3"
+                    />
+                  </div>
+
+                  {/* Recent Comparisons */}
+                  <RecentDiffsList
+                    recentDiffs={recentDiffs.filter(item => item.contentMode === 'video')}
+                    onSelect={handleRecentSelect}
+                    onRemove={removeRecentDiff}
+                    onClearAll={clearAllRecentDiffs}
+                    isLoading={isLoadingRecent}
+                  />
+                </div>
+              )}
+            </>
           )}
       </main>
 
-      {/* 模式切换确认对话框 */}
+      {/* View Mode Switch Confirm Dialog */}
       <ConfirmDialog
         isOpen={showModeConfirm}
-        title="切换视图模式"
-        message={`切换到${pendingMode === 'slider' ? 'Slider' : 'Side by Side'}模式将清空当前所有标注（${annotations.length}个），确定要继续吗？`}
-        confirmText="确认切换"
-        cancelText="取消"
+        title="Switch View Mode"
+        message={`Switching to ${pendingMode === 'slider' ? 'Slider' : 'Side by Side'} mode will clear all annotations (${annotations.length}). Are you sure you want to continue?`}
+        confirmText="Confirm"
+        cancelText="Cancel"
         onConfirm={handleConfirmModeChange}
         onCancel={handleCancelModeChange}
+      />
+
+      {/* Clear All Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        title="Clear All Content"
+        message={`This will clear all ${contentMode === 'image' ? 'images' : 'videos'} and annotations. Are you sure you want to continue?`}
+        confirmText="Clear All"
+        cancelText="Cancel"
+        onConfirm={handleConfirmClear}
+        onCancel={handleCancelClear}
+      />
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
+
+      {/* Recent Diffs Dialog */}
+      <RecentDiffsDialog
+        isOpen={showRecentDiffs}
+        onClose={() => setShowRecentDiffs(false)}
+        recentDiffs={recentDiffs}
+        onSelect={handleRecentSelect}
+        onRemove={removeRecentDiff}
+        onClearAll={clearAllRecentDiffs}
       />
     </div>
   );

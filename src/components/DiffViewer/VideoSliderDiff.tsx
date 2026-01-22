@@ -1,60 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '../../utils/cn';
-import type { Annotation, AnnotationTool } from '../../types/annotation';
+import { VideoControls } from './VideoControls';
 import { AnnotationLayer } from '../Annotation/AnnotationLayer';
-import { usePanZoom } from '../../hooks';
+import type { Annotation, AnnotationTool } from '../../types/annotation';
+import { usePanZoom, useVideoPlayback, useKeyboardShortcuts } from '../../hooks';
 import { DiffLabel } from './DiffLabel';
 import { SliderHandle } from './SliderHandle';
 import { CheckerboardBackground } from './CheckerboardBackground';
 
-interface SegmentedButtonProps {
-    options: {
-        value: string;
-        label: string;
-        icon?: React.ElementType;
-    }[];
-    value: string;
-    onChange: (value: string) => void;
-    className?: string;
-}
-
-export const SegmentedButton: React.FC<SegmentedButtonProps> = ({ options, value, onChange, className }) => {
-    return (
-        <div className={cn("inline-flex rounded-2xl border border-md-outline bg-transparent p-0 overflow-hidden", className)}>
-            {options.map((option) => {
-                const isSelected = value === option.value;
-                return (
-                    <button
-                        key={option.value}
-                        onClick={() => onChange(option.value)}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-1 px-5 py-2 text-xs font-medium transition-colors border-r border-md-outline last:border-r-0 focus:outline-none relative overflow-hidden min-w-[80px]",
-                            isSelected
-                                ? "bg-md-secondary-container text-md-on-secondary-container"
-                                : "bg-transparent text-md-on-surface-variant hover:bg-md-on-surface/10"
-                        )}
-                    >
-                        {option.icon && <option.icon size={20} />}
-                        <span>{option.label}</span>
-                    </button>
-                );
-            })}
-        </div>
-    )
-}
-
-interface ImageSize {
-  width: number;
-  height: number;
-}
-
-interface SliderDiffProps {
-  beforeImage: string;
-  afterImage: string;
+interface VideoSliderDiffProps {
+  beforeVideo: string;
+  afterVideo: string;
   zoom: number;
-  beforeSize?: ImageSize | null;
-  afterSize?: ImageSize | null;
-  hasTopTip?: boolean;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -64,16 +21,14 @@ interface SliderDiffProps {
   onAnnotationSelect: (id: string | null) => void;
   onDeleteSelected: () => void;
   onToolChange: (tool: AnnotationTool) => void;
+  onToolSelect: (tool: AnnotationTool) => void; // 用于快捷键选择工具（更新主工具）
   onAnnotationHover: (isHovering: boolean) => void;
 }
 
-export const SliderDiff: React.FC<SliderDiffProps> = ({
-  beforeImage,
-  afterImage,
+export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
+  beforeVideo,
+  afterVideo,
   zoom,
-  beforeSize,
-  afterSize,
-  hasTopTip = false,
   annotations,
   currentTool,
   currentColor,
@@ -82,18 +37,51 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
   onAnnotationSelect,
   onDeleteSelected,
   onToolChange,
+  onToolSelect,
   onAnnotationHover,
 }) => {
+  // Slider 状态
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
-  // 使用共享的 pan/zoom hook
+  // 使用共享的 hooks
   const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
   });
+
+  const {
+    beforeVideoRef,
+    afterVideoRef,
+    isPlaying,
+    currentTime,
+    duration,
+    playbackRate,
+    frameDuration,
+    beforeInfo,
+    afterInfo,
+    handlePlayPause,
+    handleSeek,
+    handleStepFrame,
+    handlePlaybackRateChange,
+  } = useVideoPlayback({ beforeVideo, afterVideo });
+
+  // 使用共享的键盘快捷键
+  useKeyboardShortcuts({
+    currentTime,
+    duration,
+    frameDuration,
+    onSeek: handleSeek,
+    onPlayPause: handlePlayPause,
+    onToolSelect,
+  });
+
+  // 判断是否在标注模式
+  const isAnnotating = currentTool !== 'select';
+
+  // ============ 滑块逻辑 ============
 
   const handleSliderMouseDown = useCallback(() => {
     setIsResizing(true);
@@ -105,8 +93,8 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
 
   const handleSliderMove = useCallback(
     (clientX: number) => {
-      if (!imageContainerRef.current) return;
-      const rect = imageContainerRef.current.getBoundingClientRect();
+      if (!videoContainerRef.current) return;
+      const rect = videoContainerRef.current.getBoundingClientRect();
       const x = clientX - rect.left;
       const percentage = Math.max(0, Math.min((x / rect.width) * 100, 100));
       setSliderPosition(percentage);
@@ -148,23 +136,17 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
     };
   }, [isResizing, handleMouseMove, handleMouseUp, handleTouchMove]);
 
-  // 判断是否在标注模式（非选择工具）
-  const isAnnotating = currentTool !== 'select';
-
   return (
     <div
-        className={cn(
-          "relative w-full h-full bg-md-surface-container-low overflow-hidden select-none"
-        )}
-        style={{ cursor: getCursor() }}
-        ref={containerRef}
-        onMouseDown={handleContainerMouseDown}
+      className="relative w-full h-full bg-md-surface-container-low overflow-hidden select-none"
+      style={{ cursor: getCursor() }}
+      ref={containerRef}
+      onMouseDown={handleContainerMouseDown}
     >
-       <CheckerboardBackground />
+      <CheckerboardBackground />
 
       <div className="absolute inset-0">
-
-        {/* Content Area - 图片层 */}
+        {/* Content Area - 视频层 */}
         <div
           className={cn(
             "absolute inset-0 flex items-center justify-center",
@@ -172,28 +154,30 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
           )}
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
-          {/* 图片容器 */}
+          {/* 视频容器 */}
           <div
-            ref={imageContainerRef}
+            ref={videoContainerRef}
             className="relative inline-block"
           >
-            {/* After Image - Base layer */}
-            <img
-              src={afterImage}
-              alt="After"
+            {/* After Video - Base layer */}
+            <video
+              ref={afterVideoRef}
+              src={afterVideo}
               className="select-none pointer-events-none block max-w-[90vw] max-h-[80vh]"
-              draggable={false}
+              muted
+              playsInline
             />
 
-            {/* Before Image - Overlay with clip-path */}
-            <img
-              src={beforeImage}
-              alt="Before"
+            {/* Before Video - Overlay with clip-path */}
+            <video
+              ref={beforeVideoRef}
+              src={beforeVideo}
               className="absolute inset-0 w-full h-full select-none pointer-events-none object-contain"
               style={{
                 clipPath: `inset(0 ${100 - sliderPosition}% 0 0)`,
               }}
-              draggable={false}
+              muted
+              playsInline
             />
           </div>
         </div>
@@ -202,16 +186,14 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
         <DiffLabel
           label="Before"
           position="left"
-          hasTopTip={hasTopTip}
-          width={beforeSize?.width}
-          height={beforeSize?.height}
+          width={beforeInfo?.width}
+          height={beforeInfo?.height}
         />
         <DiffLabel
           label="After"
           position="right"
-          hasTopTip={hasTopTip}
-          width={afterSize?.width}
-          height={afterSize?.height}
+          width={afterInfo?.width}
+          height={afterInfo?.height}
         />
 
         {/* Annotation Layer - z-10 */}
@@ -239,12 +221,12 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
           <div className="relative inline-block">
-            {/* 占位用的隐藏图片，用于获取正确的尺寸 */}
-            <img
-              src={afterImage}
-              alt=""
+            {/* 占位用的隐藏视频，用于获取正确的尺寸 */}
+            <video
+              src={afterVideo}
               className="select-none pointer-events-none block max-w-[90vw] max-h-[80vh] invisible"
-              draggable={false}
+              muted
+              playsInline
             />
             {/* Slider Handle - pointer-events: auto 使其可交互 */}
             <div className="pointer-events-auto">
@@ -257,8 +239,19 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
             </div>
           </div>
         </div>
-
       </div>
+
+      {/* Video Controls */}
+      <VideoControls
+        isPlaying={isPlaying}
+        currentTime={currentTime}
+        duration={duration}
+        playbackRate={playbackRate}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onStepFrame={handleStepFrame}
+        onPlaybackRateChange={handlePlaybackRateChange}
+      />
     </div>
   );
 };

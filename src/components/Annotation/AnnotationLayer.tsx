@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '../../utils/cn';
 import type { Annotation, AnnotationTool, ArrowAnnotation, RectAnnotation } from '../../types/annotation';
 
@@ -104,49 +104,74 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     onAnnotationSelect(null);
   }, [disabled, currentTool, screenToSvg, onAnnotationSelect]);
 
+  // 使用 ref 存储最新的绘制状态，避免闭包问题
+  const drawingStateRef = useRef({ drawStart, drawEnd, currentTool, currentColor });
+  drawingStateRef.current = { drawStart, drawEnd, currentTool, currentColor };
+
+  // 使用 window 级别的事件监听来处理绘制过程中的鼠标移动和释放
+  useEffect(() => {
+    if (!isDrawing) return;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      const pos = screenToSvg(e.clientX, e.clientY);
+      setDrawEnd(pos);
+    };
+
+    const handleWindowMouseUp = (e: MouseEvent) => {
+      e.preventDefault();
+      setIsDrawing(false);
+
+      const { drawStart, currentTool, currentColor } = drawingStateRef.current;
+      const pos = screenToSvg(e.clientX, e.clientY);
+
+      // 检查是否有足够的移动距离
+      const dx = Math.abs(pos.x - drawStart.x);
+      const dy = Math.abs(pos.y - drawStart.y);
+      if (dx < 5 && dy < 5) return;
+
+      if (currentTool === 'arrow') {
+        const arrow: ArrowAnnotation = {
+          id: generateId(),
+          type: 'arrow',
+          color: currentColor,
+          startX: drawStart.x,
+          startY: drawStart.y,
+          endX: pos.x,
+          endY: pos.y,
+        };
+        onAnnotationAdd(arrow);
+      } else if (currentTool === 'rect') {
+        const rect: RectAnnotation = {
+          id: generateId(),
+          type: 'rect',
+          color: currentColor,
+          x: Math.min(drawStart.x, pos.x),
+          y: Math.min(drawStart.y, pos.y),
+          width: Math.abs(pos.x - drawStart.x),
+          height: Math.abs(pos.y - drawStart.y),
+        };
+        onAnnotationAdd(rect);
+      }
+    };
+
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    window.addEventListener('mouseup', handleWindowMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+    };
+  }, [isDrawing, screenToSvg, onAnnotationAdd]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDrawing) return;
-
     e.preventDefault();
-    const pos = screenToSvg(e.clientX, e.clientY);
-    setDrawEnd(pos);
-  }, [isDrawing, screenToSvg]);
+  }, [isDrawing]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (!isDrawing) return;
-
+    // Window 级别的事件处理器会处理
     e.preventDefault();
-    setIsDrawing(false);
-
-    // 检查是否有足够的移动距离
-    const dx = Math.abs(drawEnd.x - drawStart.x);
-    const dy = Math.abs(drawEnd.y - drawStart.y);
-    if (dx < 5 && dy < 5) return;
-
-    if (currentTool === 'arrow') {
-      const arrow: ArrowAnnotation = {
-        id: generateId(),
-        type: 'arrow',
-        color: currentColor,
-        startX: drawStart.x,
-        startY: drawStart.y,
-        endX: drawEnd.x,
-        endY: drawEnd.y,
-      };
-      onAnnotationAdd(arrow);
-    } else if (currentTool === 'rect') {
-      const rect: RectAnnotation = {
-        id: generateId(),
-        type: 'rect',
-        color: currentColor,
-        x: Math.min(drawStart.x, drawEnd.x),
-        y: Math.min(drawStart.y, drawEnd.y),
-        width: Math.abs(drawEnd.x - drawStart.x),
-        height: Math.abs(drawEnd.y - drawStart.y),
-      };
-      onAnnotationAdd(rect);
-    }
-  }, [isDrawing, drawStart, drawEnd, currentTool, currentColor, onAnnotationAdd]);
+  }, []);
 
   const handleAnnotationClick = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -311,7 +336,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         isDrawingMode && "cursor-crosshair"
       )}
       style={{
-        zIndex: 15,
+        zIndex: 10,
         // 绘制模式：SVG 捕获所有事件
         // 选择模式：SVG 不捕获事件，但标注元素可以点击（通过 pointerEvents: auto）
         pointerEvents: isDrawingMode ? 'auto' : 'none',

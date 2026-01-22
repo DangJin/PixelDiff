@@ -1,23 +1,25 @@
-import React, { useCallback, useState } from 'react';
-import { X, Image as ImageIcon } from 'lucide-react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
+import { X, Film } from 'lucide-react';
 import { cn } from '../utils/cn';
 
-interface ImageDropzoneProps {
+interface VideoDropzoneProps {
   label: string;
-  image: string | null;
-  onImageUpload: (file: File, handle?: FileSystemFileHandle) => void;
+  video: string | null;
+  onVideoUpload: (file: File, handle?: FileSystemFileHandle) => void;
   onClear: () => void;
   className?: string;
 }
 
-export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
+export const VideoDropzone: React.FC<VideoDropzoneProps> = ({
   label,
-  image,
-  onImageUpload,
+  video,
+  onVideoUpload,
   onClear,
   className,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         const item = items[0];
         if (item.kind === 'file') {
           const file = item.getAsFile();
-          if (file && file.type.startsWith('image/')) {
+          if (file && file.type.startsWith('video/')) {
             // 尝试获取文件句柄
             let handle: FileSystemFileHandle | undefined;
             try {
@@ -55,12 +57,12 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             } catch (err) {
               console.warn('Could not get file handle from drop:', err);
             }
-            onImageUpload(file, handle);
+            onVideoUpload(file, handle);
           }
         }
       }
     },
-    [onImageUpload]
+    [onVideoUpload]
   );
 
   const handleFileSelect = useCallback(async () => {
@@ -69,71 +71,83 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
       const [handle] = await window.showOpenFilePicker({
         types: [
           {
-            description: 'Images',
+            description: 'Videos',
             accept: {
-              'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
+              'video/*': ['.mp4', '.webm', '.mov'],
             },
           },
         ],
         multiple: false,
       });
       const file = await handle.getFile();
-      onImageUpload(file, handle);
+      onVideoUpload(file, handle);
     } catch (err) {
       // 用户取消选择或浏览器不支持
       if ((err as Error).name !== 'AbortError') {
         console.warn('File picker error:', err);
       }
     }
-  }, [onImageUpload]);
+  }, [onVideoUpload]);
+
+  useEffect(() => {
+    if (videoRef.current && video) {
+      const handleLoadedMetadata = () => {
+        if (videoRef.current) {
+          setDuration(videoRef.current.duration);
+        }
+      };
+      videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+      return () => {
+        videoRef.current?.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      };
+    }
+  }, [video]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div
       className={cn(
         'relative flex flex-col items-center justify-center w-full h-full min-h-[320px] rounded-3xl transition-all duration-300 overflow-hidden',
-        // MD3 State styles
         isDragging
             ? 'bg-md-primary-container border-2 border-md-primary'
             : 'bg-md-surface-container-high border border-md-outline-variant hover:bg-md-surface-container-highest',
-        image ? 'border-none bg-black/5' : '',
+        video ? 'border-none bg-black/5' : '',
         className
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {image ? (
+      {video ? (
         <div className="relative w-full h-full flex items-center justify-center bg-[#1e1e1e]/5 overflow-hidden">
-           {/* Checkerboard Pattern */}
-           <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
-               style={{
-                   backgroundImage: `
-                    linear-gradient(45deg, #ccc 25%, transparent 25%),
-                    linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                    linear-gradient(45deg, transparent 75%, #ccc 75%),
-                    linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
-                   backgroundSize: '20px 20px',
-                   backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-               }}
-          />
-
-          <img
-            src={image}
-            alt={label}
+          <video
+            ref={videoRef}
+            src={video}
             className="max-w-full max-h-full object-contain z-10 shadow-md-2 rounded-lg"
+            muted
+            loop
+            autoPlay
+            playsInline
           />
 
-          {/* Remove Button - Floating Action Button (Small) style */}
           <button
             onClick={onClear}
             className="absolute top-4 right-4 p-2 bg-md-surface-container-high text-md-on-surface-variant hover:bg-md-error-container hover:text-md-on-error-container rounded-xl shadow-md-2 transition-colors z-20"
-            title="Remove image"
+            title="Remove video"
           >
             <X size={20} />
           </button>
 
-          <div className="absolute bottom-4 left-4 px-3 py-1 bg-md-surface/80 text-md-on-surface text-sm font-medium rounded-full backdrop-blur-md border border-md-outline-variant z-20 shadow-sm">
+          <div className="absolute bottom-4 left-4 px-3 py-1 bg-md-surface/80 text-md-on-surface text-sm font-medium rounded-full backdrop-blur-md border border-md-outline-variant z-20 shadow-sm flex items-center gap-2">
             {label}
+            {duration && (
+              <span className="text-xs opacity-70">{formatDuration(duration)}</span>
+            )}
           </div>
         </div>
       ) : (
@@ -142,7 +156,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
               "p-5 mb-4 rounded-2xl transition-colors",
               isDragging ? "bg-md-primary text-md-on-primary" : "bg-md-secondary-container text-md-on-secondary-container"
           )}>
-            <ImageIcon className="w-10 h-10" />
+            <Film className="w-10 h-10" />
           </div>
           <h3 className="mb-1 text-lg font-normal text-md-on-surface">
             {label}
@@ -154,10 +168,10 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
             onClick={handleFileSelect}
             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium bg-md-primary text-md-on-primary hover:bg-md-primary/90 shadow-sm hover:shadow-md-1 cursor-pointer transition-all active:scale-95"
           >
-            Choose Image
+            Choose Video
           </button>
           <p className="mt-4 text-xs text-md-on-surface-variant/60">
-            Supports PNG, JPG, WebP, GIF, SVG
+            Supports MP4, WebM, MOV
           </p>
         </div>
       )}

@@ -1,23 +1,16 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
-import type { Annotation, AnnotationTool } from '../../types/annotation';
+import { VideoControls } from './VideoControls';
 import { AnnotationLayer } from '../Annotation/AnnotationLayer';
-import { usePanZoom } from '../../hooks';
+import type { Annotation, AnnotationTool } from '../../types/annotation';
+import { usePanZoom, useVideoPlayback, useKeyboardShortcuts } from '../../hooks';
 import { DiffLabel } from './DiffLabel';
 import { CheckerboardBackground } from './CheckerboardBackground';
 
-interface ImageSize {
-  width: number;
-  height: number;
-}
-
-interface SideBySideDiffProps {
-  beforeImage: string;
-  afterImage: string;
+interface VideoDiffProps {
+  beforeVideo: string;
+  afterVideo: string;
   zoom: number;
-  beforeSize?: ImageSize | null;
-  afterSize?: ImageSize | null;
-  hasTopTip?: boolean;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -27,16 +20,14 @@ interface SideBySideDiffProps {
   onAnnotationSelect: (id: string | null) => void;
   onDeleteSelected: () => void;
   onToolChange: (tool: AnnotationTool) => void;
+  onToolSelect: (tool: AnnotationTool) => void; // 用于快捷键选择工具（更新主工具）
   onAnnotationHover: (isHovering: boolean) => void;
 }
 
-export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
-  beforeImage,
-  afterImage,
+export const VideoDiff: React.FC<VideoDiffProps> = ({
+  beforeVideo,
+  afterVideo,
   zoom,
-  beforeSize,
-  afterSize,
-  hasTopTip = false,
   annotations,
   currentTool,
   currentColor,
@@ -45,12 +36,39 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   onAnnotationSelect,
   onDeleteSelected,
   onToolChange,
+  onToolSelect,
   onAnnotationHover,
 }) => {
-  // 使用共享的 pan/zoom hook
+  // 使用共享的 hooks
   const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
+  });
+
+  const {
+    beforeVideoRef,
+    afterVideoRef,
+    isPlaying,
+    currentTime,
+    duration,
+    playbackRate,
+    frameDuration,
+    beforeInfo,
+    afterInfo,
+    handlePlayPause,
+    handleSeek,
+    handleStepFrame,
+    handlePlaybackRateChange,
+  } = useVideoPlayback({ beforeVideo, afterVideo });
+
+  // 使用共享的键盘快捷键
+  useKeyboardShortcuts({
+    currentTime,
+    duration,
+    frameDuration,
+    onSeek: handleSeek,
+    onPlayPause: handlePlayPause,
+    onToolSelect,
   });
 
   // 判断是否在标注模式
@@ -58,31 +76,29 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
 
   return (
     <div
-      className={cn(
-        "relative grid grid-cols-1 md:grid-cols-2 w-full h-full select-none",
-        hasTopTip && "pt-10"
-      )}
+      className="relative grid grid-cols-1 md:grid-cols-2 w-full h-full select-none"
       style={{ cursor: getCursor() }}
       onMouseDown={handleContainerMouseDown}
     >
-      {/* Before 区域 */}
+      {/* Before Video */}
       <div className="relative flex items-center justify-center bg-md-surface-container-low overflow-hidden border-r border-md-outline-variant/30">
         <CheckerboardBackground />
         <div
           className={cn("p-4 relative z-0", !isPanning && "transition-transform duration-200 ease-out")}
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
-          <img
-            src={beforeImage}
-            alt="Before"
+          <video
+            ref={beforeVideoRef}
+            src={beforeVideo}
             className="max-w-full max-h-full object-contain select-none pointer-events-none"
-            draggable={false}
+            muted
+            playsInline
           />
         </div>
         <DiffLabel
           label="Before"
-          width={beforeSize?.width}
-          height={beforeSize?.height}
+          width={beforeInfo?.width}
+          height={beforeInfo?.height}
         />
         {/* Before 区域的标注层 */}
         <AnnotationLayer
@@ -101,24 +117,25 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
         />
       </div>
 
-      {/* After 区域 */}
+      {/* After Video */}
       <div className="relative flex items-center justify-center bg-md-surface-container-low overflow-hidden">
         <CheckerboardBackground />
         <div
           className={cn("p-4 relative z-0", !isPanning && "transition-transform duration-200 ease-out")}
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
-          <img
-            src={afterImage}
-            alt="After"
+          <video
+            ref={afterVideoRef}
+            src={afterVideo}
             className="max-w-full max-h-full object-contain select-none pointer-events-none"
-            draggable={false}
+            muted
+            playsInline
           />
         </div>
         <DiffLabel
           label="After"
-          width={afterSize?.width}
-          height={afterSize?.height}
+          width={afterInfo?.width}
+          height={afterInfo?.height}
         />
         {/* After 区域的标注层 - 允许绘制和选择 */}
         <AnnotationLayer
@@ -136,6 +153,18 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
           disabled={!isAnnotating && currentTool === 'select'}
         />
       </div>
+
+      {/* Video Controls */}
+      <VideoControls
+        isPlaying={isPlaying}
+        currentTime={currentTime}
+        duration={duration}
+        playbackRate={playbackRate}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onStepFrame={handleStepFrame}
+        onPlaybackRateChange={handlePlaybackRateChange}
+      />
     </div>
   );
 };

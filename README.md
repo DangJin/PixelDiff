@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# PixelDiff
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Spot Every Difference, Pixel by Pixel**
 
-Currently, two official plugins are available:
+A visual comparison tool for designers and developers to quickly identify differences between images and videos.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+### Image Comparison
+- **Slider Mode** - Drag the slider to reveal differences between two images
+- **Side by Side Mode** - View both images simultaneously for direct comparison
+- **Resolution Display** - Shows image dimensions for both before and after versions
+- **Format Support** - PNG, JPG, WebP, GIF, SVG
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Video Comparison
+- **Synchronized Playback** - Both videos play in perfect sync
+- **Frame-by-Frame Navigation** - Step through videos one frame at a time
+- **Playback Speed Control** - 0.5x, 1x, 2x speed options
+- **Keyboard Shortcuts** - Space to play/pause, arrow keys to navigate
 
-## Expanding the ESLint configuration
+### Recent Comparisons
+- **Quick Access** - Instantly reopen previous comparisons from history
+- **Thumbnail Previews** - Visual preview of before/after for each comparison
+- **Persistent Storage** - History survives browser refresh (Chrome/Edge)
+- **Filter by Type** - Separate views for image and video comparisons
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Annotation Tools
+- **Arrow Tool** - Point out specific areas of interest
+- **Rectangle Tool** - Highlight regions for discussion
+- **Color Options** - Multiple colors for different annotation purposes
+- **Easy Selection** - Click to select and delete annotations
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Navigation
+- **Zoom** - Zoom in/out to inspect fine details
+- **Pan** - Click and drag to move around the image/video
+- **Keyboard Support** - Full keyboard navigation support
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Use Cases
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Design Review** - Compare design iterations and spot changes
+- **QA Testing** - Verify UI implementations match designs
+- **Version Control** - Visualize changes between file versions
+- **Bug Reporting** - Annotate and document visual issues
+- **Client Feedback** - Share annotated comparisons with stakeholders
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Choose between **Image** or **Video** mode
+2. Upload your "Before" and "After" files
+3. Use **Slider** or **Side by Side** view to compare
+4. Add annotations to highlight differences
+5. Navigate with zoom and pan for detailed inspection
+6. Access recent comparisons from the history panel
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Play/Pause (Video) |
+| `←` / `→` | Previous/Next frame (Video) |
+| `V` | Select tool |
+| `A` | Arrow tool |
+| `R` | Rectangle tool |
+| `Delete` / `Backspace` | Delete selected annotation |
+
+## Browser Support
+
+- **Chrome** - Full support including history persistence
+- **Edge** - Full support including history persistence
+- Other browsers - Core features work, history may not persist
+
+## License
+
+MIT
+
+## Links
+
+- [GitHub Repository](https://github.com/DangJin/PixelDiff)

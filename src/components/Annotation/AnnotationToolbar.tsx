@@ -21,17 +21,17 @@ export const AnnotationToolbar: React.FC<AnnotationToolbarProps> = ({
   onDeleteSelected,
   hasSelection,
 }) => {
-  const tools: { tool: AnnotationTool; icon: React.ElementType; label: string }[] = [
-    { tool: 'select', icon: MousePointer2, label: '选择' },
-    { tool: 'arrow', icon: MoveRight, label: '箭头' },
-    { tool: 'rect', icon: Square, label: '矩形遮罩' },
+  const tools: { tool: AnnotationTool; icon: React.ElementType; label: string; shortcut: string }[] = [
+    { tool: 'select', icon: MousePointer2, label: 'Select', shortcut: 'V' },
+    { tool: 'arrow', icon: MoveRight, label: 'Arrow', shortcut: 'A' },
+    { tool: 'rect', icon: Square, label: 'Rectangle', shortcut: 'R' },
   ];
 
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2 bg-md-surface/95 backdrop-blur-md rounded-2xl shadow-md-3 border border-md-outline-variant p-2">
       {/* 工具选择 */}
       <div className="flex flex-col gap-1">
-        {tools.map(({ tool, icon: Icon, label }) => (
+        {tools.map(({ tool, icon: Icon, label, shortcut }) => (
           <button
             key={tool}
             onClick={() => onToolChange(tool)}
@@ -41,7 +41,7 @@ export const AnnotationToolbar: React.FC<AnnotationToolbarProps> = ({
                 ? "bg-md-primary text-md-on-primary"
                 : "text-md-on-surface hover:bg-md-on-surface/10"
             )}
-            title={label}
+            title={`${label} (${shortcut})`}
           >
             <Icon size={20} />
           </button>
@@ -80,7 +80,7 @@ export const AnnotationToolbar: React.FC<AnnotationToolbarProps> = ({
             ? "text-md-error hover:bg-md-error/10"
             : "text-md-on-surface/30 cursor-not-allowed"
         )}
-        title="删除选中"
+        title="Delete (Del)"
       >
         <Trash2 size={20} />
       </button>

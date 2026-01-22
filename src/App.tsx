@@ -568,25 +568,28 @@ function App() {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                <div className="flex-1 flex flex-col items-center py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 relative overflow-y-auto overflow-x-hidden">
                   {/* 装饰性背景 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5" />
-                  <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl" />
-                  <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl" />
+                  <div className="fixed inset-0 top-16 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5 pointer-events-none" />
+                  <div className="fixed top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="fixed bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl pointer-events-none" />
+
+                  {/* Spacer for vertical centering on large screens */}
+                  <div className="flex-1 min-h-0 lg:min-h-[20px]" />
 
                   {/* Hero Section */}
-                  <div className="relative z-10 text-center mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
+                  <div className="relative z-10 text-center mb-4 sm:mb-6 lg:mb-8">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-md-on-surface mb-2 sm:mb-3">
                       Spot Every Difference, Pixel by Pixel
                     </h2>
-                    <p className="text-md-on-surface-variant max-w-lg mx-auto mb-6">
+                    <p className="text-sm sm:text-base text-md-on-surface-variant max-w-lg mx-auto mb-4 sm:mb-6">
                       Compare images or videos across different versions, resolutions, or formats.
                       Ideal for design reviews, QA testing, and visual regression checks.
                     </p>
                     <ContentModeSelector value={contentMode} onChange={setContentMode} />
                   </div>
 
-                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
                     <ImageDropzone
                       label="Original / Before"
                       image={beforeImage}
@@ -620,8 +623,11 @@ function App() {
                     onRemove={removeRecentDiff}
                     onClearAll={clearAllRecentDiffs}
                     isLoading={isLoadingRecent}
-                    className="relative z-10"
+                    className="relative z-10 mt-6 sm:mt-8 lg:mt-12"
                   />
+
+                  {/* Spacer for vertical centering on large screens */}
+                  <div className="flex-1 min-h-0 lg:min-h-[20px]" />
                 </div>
               )}
             </>
@@ -688,25 +694,28 @@ function App() {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                <div className="flex-1 flex flex-col items-center py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 relative overflow-y-auto overflow-x-hidden">
                   {/* 装饰性背景 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5" />
-                  <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl" />
-                  <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl" />
+                  <div className="fixed inset-0 top-16 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5 pointer-events-none" />
+                  <div className="fixed top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="fixed bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl pointer-events-none" />
+
+                  {/* Spacer for vertical centering on large screens */}
+                  <div className="flex-1 min-h-0 lg:min-h-[20px]" />
 
                   {/* Hero Section */}
-                  <div className="relative z-10 text-center mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
+                  <div className="relative z-10 text-center mb-4 sm:mb-6 lg:mb-8">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-md-on-surface mb-2 sm:mb-3">
                       Spot Every Difference, Pixel by Pixel
                     </h2>
-                    <p className="text-md-on-surface-variant max-w-lg mx-auto mb-6">
+                    <p className="text-sm sm:text-base text-md-on-surface-variant max-w-lg mx-auto mb-4 sm:mb-6">
                       Compare images or videos across different versions, resolutions, or formats.
                       Ideal for design reviews, QA testing, and visual regression checks.
                     </p>
                     <ContentModeSelector value={contentMode} onChange={setContentMode} />
                   </div>
 
-                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
                     <VideoDropzone
                       label="Original / Before"
                       video={beforeVideo}
@@ -738,8 +747,11 @@ function App() {
                     onRemove={removeRecentDiff}
                     onClearAll={clearAllRecentDiffs}
                     isLoading={isLoadingRecent}
-                    className="relative z-10"
+                    className="relative z-10 mt-6 sm:mt-8 lg:mt-12"
                   />
+
+                  {/* Spacer for vertical centering on large screens */}
+                  <div className="flex-1 min-h-0 lg:min-h-[20px]" />
                 </div>
               )}
             </>

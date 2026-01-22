@@ -72,7 +72,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
           onClick={() => onStepFrame(-1)}
           disabled={isPlaying}
           className="p-2 rounded-full hover:bg-md-on-surface/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-md-on-surface"
-          title="上一帧 (帧步退)"
+          title="Previous Frame"
         >
           <ChevronLeft size={18} />
         </button>
@@ -81,7 +81,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         <button
           onClick={() => onSeek(Math.max(0, currentTime - 5))}
           className="p-2 rounded-full hover:bg-md-on-surface/10 transition-colors text-md-on-surface"
-          title="后退 5 秒"
+          title="Rewind 5s"
         >
           <SkipBack size={18} />
         </button>
@@ -90,7 +90,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         <button
           onClick={onPlayPause}
           className="p-3 rounded-full bg-md-primary text-md-on-primary hover:bg-md-primary/90 transition-colors mx-1"
-          title={isPlaying ? '暂停' : '播放'}
+          title={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
         </button>
@@ -99,7 +99,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
         <button
           onClick={() => onSeek(Math.min(duration, currentTime + 5))}
           className="p-2 rounded-full hover:bg-md-on-surface/10 transition-colors text-md-on-surface"
-          title="前进 5 秒"
+          title="Forward 5s"
         >
           <SkipForward size={18} />
         </button>
@@ -109,7 +109,7 @@ export const VideoControls: React.FC<VideoControlsProps> = ({
           onClick={() => onStepFrame(1)}
           disabled={isPlaying}
           className="p-2 rounded-full hover:bg-md-on-surface/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-md-on-surface"
-          title="下一帧 (帧步进)"
+          title="Next Frame"
         >
           <ChevronRight size={18} />
         </button>

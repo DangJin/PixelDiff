@@ -13,7 +13,7 @@ import { RecentDiffsDialog } from './components/ui/RecentDiffsDialog';
 import { RecentDiffsList } from './components/ui/RecentDiffsList';
 import type { Annotation, AnnotationTool } from './types/annotation';
 import { DEFAULT_ANNOTATION_COLOR } from './types/annotation';
-import { GitCompare, Trash2, Github, Keyboard, History } from 'lucide-react';
+import { GitCompare, Github, Keyboard, History, X, Eraser } from 'lucide-react';
 import { ContentModeSelector } from './components/ContentModeSelector';
 import { ViewModeSelector } from './components/ViewModeSelector';
 import { Button, IconButton } from './components/ui/Button';
@@ -59,8 +59,11 @@ function App() {
   const [pendingMode, setPendingMode] = useState<ViewMode | null>(null);
   const [showModeConfirm, setShowModeConfirm] = useState(false);
 
-  // 清空确认对话框
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  // 退出确认对话框
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // 清除标注确认对话框
+  const [showClearAnnotationsConfirm, setShowClearAnnotationsConfirm] = useState(false);
 
   // 快捷键帮助弹窗
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -240,13 +243,13 @@ function App() {
     }
   };
 
-  // 显示清空确认对话框
-  const handleClearClick = () => {
-    setShowClearConfirm(true);
+  // 显示退出确认对话框
+  const handleExitClick = () => {
+    setShowExitConfirm(true);
   };
 
-  // 确认清空
-  const handleConfirmClear = () => {
+  // 确认退出（清除文件和标注，返回上传页面）
+  const handleConfirmExit = () => {
     if (contentMode === 'image') {
       if (beforeImage) URL.revokeObjectURL(beforeImage);
       if (afterImage) URL.revokeObjectURL(afterImage);
@@ -254,33 +257,52 @@ function App() {
       setAfterImage(null);
       setBeforeSize(null);
       setAfterSize(null);
-      // 清除标注
-      setAnnotations([]);
-      setSelectedAnnotationId(null);
-      setCurrentTool('select');
+      setBeforeImageHandle(null);
+      setAfterImageHandle(null);
     } else {
       if (beforeVideo) URL.revokeObjectURL(beforeVideo);
       if (afterVideo) URL.revokeObjectURL(afterVideo);
       setBeforeVideo(null);
       setAfterVideo(null);
-      // 清除标注
-      setAnnotations([]);
-      setSelectedAnnotationId(null);
-      setCurrentTool('select');
+      setBeforeVideoHandle(null);
+      setAfterVideoHandle(null);
     }
-    setShowClearConfirm(false);
+    // 清除标注
+    setAnnotations([]);
+    setSelectedAnnotationId(null);
+    setCurrentTool('select');
+    setPrimaryTool('select');
+    setShowExitConfirm(false);
   };
 
-  // 取消清空
-  const handleCancelClear = () => {
-    setShowClearConfirm(false);
+  // 取消退出
+  const handleCancelExit = () => {
+    setShowExitConfirm(false);
+  };
+
+  // 显示清除标注确认对话框
+  const handleClearAnnotationsClick = () => {
+    if (annotations.length > 0) {
+      setShowClearAnnotationsConfirm(true);
+    }
+  };
+
+  // 确认清除标注（只清除标注，保留文件）
+  const handleConfirmClearAnnotations = () => {
+    setAnnotations([]);
+    setSelectedAnnotationId(null);
+    setCurrentTool('select');
+    setPrimaryTool('select');
+    setShowClearAnnotationsConfirm(false);
+  };
+
+  // 取消清除标注
+  const handleCancelClearAnnotations = () => {
+    setShowClearAnnotationsConfirm(false);
   };
 
   const hasBothImages = beforeImage && afterImage;
   const hasBothVideos = beforeVideo && afterVideo;
-  const hasAnyContent = contentMode === 'image'
-    ? (beforeImage || afterImage)
-    : (beforeVideo || afterVideo);
 
   // 从历史记录加载
   const handleRecentSelect = useCallback(async (item: import('./hooks/useRecentDiffs').RecentDiffItem) => {
@@ -402,23 +424,43 @@ function App() {
 
            {/* Trailing Actions */}
            <div className="flex items-center gap-2">
-             {/* Clear All - only show when has content */}
-             {hasAnyContent && (
-                <Button
-                    variant="text"
-                    label="Clear All"
-                    icon={Trash2}
-                    onClick={handleClearClick}
-                    className="hidden sm:flex text-md-error hover:bg-md-error/10"
-                />
+             {/* Clear Annotations - only show in compare mode when has annotations */}
+             {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && annotations.length > 0 && (
+                <>
+                  <Button
+                      variant="text"
+                      label="Clear Annotations"
+                      icon={Eraser}
+                      onClick={handleClearAnnotationsClick}
+                      className="hidden sm:flex text-md-on-surface-variant hover:bg-md-on-surface/10"
+                  />
+                  <IconButton
+                     variant="text"
+                     icon={Eraser}
+                     onClick={handleClearAnnotationsClick}
+                     className="sm:hidden"
+                     title="Clear Annotations"
+                  />
+                </>
              )}
-             {hasAnyContent && (
-                <IconButton
-                   variant="filled"
-                   icon={Trash2}
-                   onClick={handleClearClick}
-                   className="sm:hidden bg-md-error-container text-md-on-error-container hover:bg-md-error-container/80"
-                />
+             {/* Exit - only show in compare mode */}
+             {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && (
+                <>
+                  <Button
+                      variant="text"
+                      label="Exit"
+                      icon={X}
+                      onClick={handleExitClick}
+                      className="hidden sm:flex text-md-error hover:bg-md-error/10"
+                  />
+                  <IconButton
+                     variant="text"
+                     icon={X}
+                     onClick={handleExitClick}
+                     className="sm:hidden text-md-error"
+                     title="Exit"
+                  />
+                </>
              )}
              {/* Recent Diffs */}
              <IconButton
@@ -498,7 +540,7 @@ function App() {
                     <div className={`absolute top-0 left-0 right-0 z-20 border-b border-md-outline-variant px-4 py-2 flex items-center justify-center gap-4 backdrop-blur-sm ${aspectRatioMatch ? 'bg-md-tertiary-container/80' : 'bg-md-error-container/80'}`}>
                       <div className={`text-sm ${aspectRatioMatch ? 'text-md-on-tertiary-container' : 'text-md-on-error-container'}`}>
                         <span className="font-medium">
-                          {aspectRatioMatch ? '尺寸不同（比例相同，已自动对齐）：' : '⚠️ 宽高比不同，Slider 比较可能不准确：'}
+                          {aspectRatioMatch ? 'Different sizes (same aspect ratio, auto-aligned):' : '⚠️ Different aspect ratios, slider comparison may be inaccurate:'}
                         </span>
                         <span className="ml-2">Before {beforeSize?.width}×{beforeSize?.height}</span>
                         <span className="mx-2">→</span>
@@ -526,9 +568,14 @@ function App() {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                  {/* 装饰性背景 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5" />
+                  <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl" />
+                  <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl" />
+
                   {/* Hero Section */}
-                  <div className="text-center mb-8">
+                  <div className="relative z-10 text-center mb-8">
                     <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
                       Spot Every Difference, Pixel by Pixel
                     </h2>
@@ -539,7 +586,7 @@ function App() {
                     <ContentModeSelector value={contentMode} onChange={setContentMode} />
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
                     <ImageDropzone
                       label="Original / Before"
                       image={beforeImage}
@@ -573,6 +620,7 @@ function App() {
                     onRemove={removeRecentDiff}
                     onClearAll={clearAllRecentDiffs}
                     isLoading={isLoadingRecent}
+                    className="relative z-10"
                   />
                 </div>
               )}
@@ -640,9 +688,14 @@ function App() {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+                <div className="flex-1 flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+                  {/* 装饰性背景 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-md-primary/5 via-transparent to-md-tertiary/5" />
+                  <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-md-primary/10 rounded-full blur-3xl" />
+                  <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-md-tertiary/10 rounded-full blur-3xl" />
+
                   {/* Hero Section */}
-                  <div className="text-center mb-8">
+                  <div className="relative z-10 text-center mb-8">
                     <h2 className="text-2xl sm:text-3xl font-bold text-md-on-surface mb-3">
                       Spot Every Difference, Pixel by Pixel
                     </h2>
@@ -653,7 +706,7 @@ function App() {
                     <ContentModeSelector value={contentMode} onChange={setContentMode} />
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl h-auto lg:h-[400px]">
                     <VideoDropzone
                       label="Original / Before"
                       video={beforeVideo}
@@ -685,6 +738,7 @@ function App() {
                     onRemove={removeRecentDiff}
                     onClearAll={clearAllRecentDiffs}
                     isLoading={isLoadingRecent}
+                    className="relative z-10"
                   />
                 </div>
               )}
@@ -703,15 +757,26 @@ function App() {
         onCancel={handleCancelModeChange}
       />
 
-      {/* Clear All Confirm Dialog */}
+      {/* Exit Confirm Dialog */}
       <ConfirmDialog
-        isOpen={showClearConfirm}
-        title="Clear All Content"
-        message={`This will clear all ${contentMode === 'image' ? 'images' : 'videos'} and annotations. Are you sure you want to continue?`}
-        confirmText="Clear All"
+        isOpen={showExitConfirm}
+        title="Exit Comparison"
+        message={`This will close the current comparison and return to the upload page. ${annotations.length > 0 ? `All annotations (${annotations.length}) will be lost.` : ''} Are you sure?`}
+        confirmText="Exit"
         cancelText="Cancel"
-        onConfirm={handleConfirmClear}
-        onCancel={handleCancelClear}
+        onConfirm={handleConfirmExit}
+        onCancel={handleCancelExit}
+      />
+
+      {/* Clear Annotations Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showClearAnnotationsConfirm}
+        title="Clear Annotations"
+        message={`This will clear all ${annotations.length} annotation${annotations.length > 1 ? 's' : ''}. The ${contentMode === 'image' ? 'images' : 'videos'} will be kept. Are you sure?`}
+        confirmText="Clear"
+        cancelText="Cancel"
+        onConfirm={handleConfirmClearAnnotations}
+        onCancel={handleCancelClearAnnotations}
       />
 
       {/* Keyboard Shortcuts Dialog */}

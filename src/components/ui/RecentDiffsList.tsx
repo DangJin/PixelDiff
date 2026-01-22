@@ -7,6 +7,7 @@ interface RecentDiffsListProps {
   onRemove: (id: string) => void;
   onClearAll: () => void;
   isLoading?: boolean;
+  className?: string;
 }
 
 const formatTime = (timestamp: number) => {
@@ -27,13 +28,14 @@ export const RecentDiffsList: React.FC<RecentDiffsListProps> = ({
   onRemove,
   onClearAll,
   isLoading = false,
+  className = '',
 }) => {
   if (recentDiffs.length === 0) {
     return null;
   }
 
   return (
-    <div className="w-full max-w-5xl mt-12">
+    <div className={`w-full max-w-5xl mt-12 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-md-on-surface-variant">

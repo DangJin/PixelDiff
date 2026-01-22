@@ -29,11 +29,18 @@ A visual comparison tool for designers and developers to quickly identify differ
 - **Rectangle Tool** - Highlight regions for discussion
 - **Color Options** - Multiple colors for different annotation purposes
 - **Easy Selection** - Click to select and delete annotations
+- **Clear Annotations** - Remove all annotations while keeping files loaded
+- **Re-annotate** - Clear and start fresh without re-uploading files
 
 ### Navigation
 - **Zoom** - Zoom in/out to inspect fine details
 - **Pan** - Click and drag to move around the image/video
 - **Keyboard Support** - Full keyboard navigation support
+
+### Session Management
+- **Exit** - Close current comparison and return to upload page
+- **Clear Annotations** - Remove annotations without closing the comparison
+- **Quick Re-compare** - Annotate multiple times without re-uploading files
 
 ## Use Cases
 

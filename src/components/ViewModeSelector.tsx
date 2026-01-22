@@ -51,7 +51,7 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
             ? 'text-md-on-secondary-container'
             : 'text-md-on-surface-variant hover:text-md-on-surface'
         }`}
-        title="Slider 模式"
+        title="Slider Mode"
       >
         <GitCompare size={16} />
         <span className="hidden sm:inline">Slider</span>
@@ -64,7 +64,7 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
             ? 'text-md-on-secondary-container'
             : 'text-md-on-surface-variant hover:text-md-on-surface'
         }`}
-        title="Side by Side 模式"
+        title="Side by Side Mode"
       >
         <Columns size={16} />
         <span className="hidden sm:inline">Side by Side</span>

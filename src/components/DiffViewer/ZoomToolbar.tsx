@@ -24,7 +24,7 @@ export const ZoomToolbar: React.FC<ZoomToolbarProps> = ({
         onClick={onZoomOut}
         disabled={zoom <= MIN_ZOOM}
         className="p-2 rounded-full hover:bg-md-on-surface/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-md-on-surface"
-        title="缩小"
+        title="Zoom Out"
       >
         <ZoomOut size={20} />
       </button>
@@ -32,7 +32,7 @@ export const ZoomToolbar: React.FC<ZoomToolbarProps> = ({
       <button
         onClick={onZoomReset}
         className="px-3 py-1 min-w-[60px] text-sm font-medium text-md-on-surface hover:bg-md-on-surface/10 rounded-full transition-colors"
-        title="重置缩放"
+        title="Reset Zoom"
       >
         {Math.round(zoom * 100)}%
       </button>
@@ -41,7 +41,7 @@ export const ZoomToolbar: React.FC<ZoomToolbarProps> = ({
         onClick={onZoomIn}
         disabled={zoom >= MAX_ZOOM}
         className="p-2 rounded-full hover:bg-md-on-surface/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-md-on-surface"
-        title="放大"
+        title="Zoom In"
       >
         <ZoomIn size={20} />
       </button>

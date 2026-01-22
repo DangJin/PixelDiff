@@ -48,9 +48,12 @@ function App() {
     setZoom(1);
   }, []);
 
-  // 标注回调
+  // 标注回调 - 添加后自动切换回 select 模式
   const handleAnnotationAdd = useCallback((annotation: Annotation) => {
     setAnnotations(prev => [...prev, annotation]);
+    // 标注完成后自动切换回 Hand 模式
+    setPrimaryTool('select');
+    setCurrentTool('select');
   }, []);
 
   const handleDeleteSelected = useCallback(() => {
@@ -118,6 +121,33 @@ function App() {
     setShowModeConfirm(false);
     setPendingMode(null);
   }, []);
+
+  // 键盘快捷键：A 切换箭头，R 切换矩形
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果在输入框中，不处理快捷键
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // 只有在有图片时才处理快捷键
+      if (!beforeImage || !afterImage) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'a') {
+        e.preventDefault();
+        setPrimaryTool('arrow');
+        setCurrentTool('arrow');
+      } else if (key === 'r') {
+        e.preventDefault();
+        setPrimaryTool('rect');
+        setCurrentTool('rect');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [beforeImage, afterImage]);
 
   // Cleanup object URLs on unmount or change
   useEffect(() => {

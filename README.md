@@ -4,6 +4,8 @@
 
 A visual comparison tool for designers and developers to quickly identify differences between images and videos.
 
+![PixelDiff Screenshot](./public/screenshot.png)
+
 ## Features
 
 ### Image Comparison

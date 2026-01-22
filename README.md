@@ -1,10 +1,24 @@
+<div align="center">
+
 # PixelDiff
 
 **Spot Every Difference, Pixel by Pixel**
 
 A visual comparison tool for designers and developers to quickly identify differences between images and videos.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/DangJin/PixelDiff?style=social)](https://github.com/DangJin/PixelDiff/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/DangJin/PixelDiff?style=social)](https://github.com/DangJin/PixelDiff/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/DangJin/PixelDiff)](https://github.com/DangJin/PixelDiff/issues)
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+
 ![PixelDiff Screenshot](./public/screenshot.png)
+
+</div>
 
 ## Features
 
@@ -81,6 +95,16 @@ A visual comparison tool for designers and developers to quickly identify differ
 ## License
 
 MIT
+
+## Star History
+
+<a href="https://star-history.com/#DangJin/PixelDiff&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=DangJin/PixelDiff&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=DangJin/PixelDiff&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=DangJin/PixelDiff&type=Date" />
+ </picture>
+</a>
 
 ## Links
 

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1200px;
+      height: 630px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1C1B1F 0%, #2D2A33 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Decorative blurs */
+    .blur-1 {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 400px;
+      height: 400px;
+      background: rgba(103, 80, 164, 0.3);
+      border-radius: 50%;
+      filter: blur(100px);
+    }
+
+    .blur-2 {
+      position: absolute;
+      bottom: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: rgba(125, 82, 96, 0.3);
+      border-radius: 50%;
+      filter: blur(100px);
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .logo {
+      width: 100px;
+      height: 100px;
+      background: #6750A4;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 60px rgba(103, 80, 164, 0.4);
+    }
+
+    .logo svg {
+      width: 60px;
+      height: 60px;
+    }
+
+    h1 {
+      font-size: 72px;
+      font-weight: 700;
+      color: #E6E1E5;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+    }
+
+    h1 span {
+      color: #D0BCFF;
+    }
+
+    .tagline {
+      font-size: 32px;
+      color: #CAC4D0;
+      margin-bottom: 50px;
+      font-weight: 400;
+    }
+
+    .features {
+      display: flex;
+      gap: 40px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 16px 28px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature svg {
+      width: 24px;
+      height: 24px;
+      color: #D0BCFF;
+    }
+
+    .feature span {
+      font-size: 20px;
+      color: #E6E1E5;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-1"></div>
+  <div class="blur-2"></div>
+
+  <div class="container">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#EADDFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="4" r="2"/>
+        <circle cx="18" cy="20" r="2"/>
+        <path d="M18 16V9a3 3 0 0 0-3-3H9"/>
+        <path d="M6 8v7a3 3 0 0 0 3 3h6"/>
+        <path d="M8 4h8M8 20h8"/>
+      </svg>
+    </div>
+
+    <h1>Pixel<span>Diff</span></h1>
+
+    <p class="tagline">Spot Every Difference, Pixel by Pixel</p>
+
+    <div class="features">
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+        <span>Image Diff</span>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span>Video Diff</span>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <span>Annotations</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

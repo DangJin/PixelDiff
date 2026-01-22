@@ -66,6 +66,45 @@ A visual comparison tool for designers and developers to quickly identify differ
 - **Bug Reporting** - Annotate and document visual issues
 - **Client Feedback** - Share annotated comparisons with stakeholders
 
+## Installation
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [pnpm](https://pnpm.io/) (recommended) or npm
+
+### Clone and Install
+
+```bash
+# Clone the repository
+git clone https://github.com/DangJin/PixelDiff.git
+
+# Navigate to the app directory
+cd PixelDiff/app
+
+# Install dependencies
+pnpm install
+```
+
+### Development
+
+```bash
+# Start the development server
+pnpm dev
+```
+
+The app will be available at `http://localhost:5173`
+
+### Build for Production
+
+```bash
+# Build the app
+pnpm build
+
+# Preview the production build
+pnpm preview
+```
+
 ## Getting Started
 
 1. Choose between **Image** or **Video** mode

@@ -462,13 +462,15 @@ function App() {
                   />
                 </>
              )}
-             {/* Recent Diffs */}
-             <IconButton
-                variant="text"
-                icon={History}
-                onClick={() => setShowRecentDiffs(true)}
-                title="Recent Comparisons"
-             />
+             {/* Recent Diffs - only show in compare mode (homepage has RecentDiffsList) */}
+             {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && (
+               <IconButton
+                  variant="text"
+                  icon={History}
+                  onClick={() => setShowRecentDiffs(true)}
+                  title="Recent Comparisons"
+               />
+             )}
              {/* Keyboard Shortcuts */}
              <IconButton
                 variant="text"

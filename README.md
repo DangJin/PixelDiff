@@ -25,11 +25,13 @@ A visual comparison tool for designers and developers to quickly identify differ
 ### Image Comparison
 - **Slider Mode** - Drag the slider to reveal differences between two images
 - **Side by Side Mode** - View both images simultaneously for direct comparison
+- **Overlay Mode** - Adjust opacity to blend before/after images for subtle difference detection
 - **Resolution Display** - Shows image dimensions for both before and after versions
 - **Format Support** - PNG, JPG, WebP, GIF, SVG
 
 ### Video Comparison
 - **Synchronized Playback** - Both videos play in perfect sync
+- **Slider & Overlay Modes** - Same comparison modes as images
 - **Frame-by-Frame Navigation** - Step through videos one frame at a time
 - **Playback Speed Control** - 0.5x, 1x, 2x speed options
 - **Keyboard Shortcuts** - Space to play/pause, arrow keys to navigate
@@ -43,13 +45,14 @@ A visual comparison tool for designers and developers to quickly identify differ
 ### Annotation Tools
 - **Arrow Tool** - Point out specific areas of interest
 - **Rectangle Tool** - Highlight regions for discussion
+- **Circle Tool** - Circle areas to draw attention
 - **Color Options** - Multiple colors for different annotation purposes
 - **Easy Selection** - Click to select and delete annotations
 - **Clear Annotations** - Remove all annotations while keeping files loaded
 - **Re-annotate** - Clear and start fresh without re-uploading files
 
 ### Navigation
-- **Zoom** - Zoom in/out to inspect fine details
+- **Zoom** - Zoom in/out to inspect fine details (buttons or mouse wheel)
 - **Pan** - Click and drag to move around the image/video
 - **Keyboard Support** - Full keyboard navigation support
 
@@ -123,6 +126,7 @@ pnpm preview
 | `V` | Select tool |
 | `A` | Arrow tool |
 | `R` | Rectangle tool |
+| `C` | Circle tool |
 | `Delete` / `Backspace` | Delete selected annotation |
 
 ## Browser Support

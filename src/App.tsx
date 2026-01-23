@@ -163,7 +163,7 @@ function App() {
     setPendingMode(null);
   }, []);
 
-  // 键盘快捷键：V 选择，A 箭头，R 矩形
+  // 键盘快捷键：V 选择，A 箭头，R 矩形，C 圆形
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 如果在输入框中，不处理快捷键
@@ -513,6 +513,8 @@ function App() {
                         beforeSize={beforeSize}
                         afterSize={afterSize}
                         hasTopTip={!!sizeMismatch}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -531,6 +533,8 @@ function App() {
                         beforeSize={beforeSize}
                         afterSize={afterSize}
                         hasTopTip={!!sizeMismatch}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -551,6 +555,8 @@ function App() {
                         hasTopTip={!!sizeMismatch}
                         opacity={overlayOpacity}
                         onOpacityChange={setOverlayOpacity}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -674,6 +680,8 @@ function App() {
                         beforeVideo={beforeVideo}
                         afterVideo={afterVideo}
                         zoom={zoom}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -690,6 +698,8 @@ function App() {
                         beforeVideo={beforeVideo}
                         afterVideo={afterVideo}
                         zoom={zoom}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -708,6 +718,8 @@ function App() {
                         zoom={zoom}
                         opacity={overlayOpacity}
                         onOpacityChange={setOverlayOpacity}
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}

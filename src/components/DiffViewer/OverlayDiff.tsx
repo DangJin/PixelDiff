@@ -20,6 +20,9 @@ interface OverlayDiffProps {
   hasTopTip?: boolean;
   opacity: number;
   onOpacityChange: (opacity: number) => void;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -41,6 +44,8 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
   hasTopTip = false,
   opacity,
   onOpacityChange,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -55,9 +60,11 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   // 判断是否在标注模式（非选择工具）
@@ -71,6 +78,7 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
+      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 

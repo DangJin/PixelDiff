@@ -12,6 +12,9 @@ interface VideoSliderDiffProps {
   beforeVideo: string;
   afterVideo: string;
   zoom: number;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -29,6 +32,8 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
   beforeVideo,
   afterVideo,
   zoom,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -47,9 +52,11 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 hooks
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   const {
@@ -142,6 +149,7 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
+      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 

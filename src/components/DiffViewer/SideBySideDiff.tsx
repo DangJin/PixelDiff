@@ -18,6 +18,9 @@ interface SideBySideDiffProps {
   beforeSize?: ImageSize | null;
   afterSize?: ImageSize | null;
   hasTopTip?: boolean;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -37,6 +40,8 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   beforeSize,
   afterSize,
   hasTopTip = false,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -48,9 +53,11 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   onAnnotationHover,
 }) => {
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   // 判断是否在标注模式
@@ -64,6 +71,7 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
       )}
       style={{ cursor: getCursor() }}
       onMouseDown={handleContainerMouseDown}
+      onWheel={handleWheel}
     >
       {/* Before 区域 */}
       <div className="relative flex items-center justify-center bg-md-surface-container-low overflow-hidden border-r border-md-outline-variant/30">

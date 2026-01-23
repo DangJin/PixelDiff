@@ -13,6 +13,9 @@ interface VideoOverlayDiffProps {
   zoom: number;
   opacity: number;
   onOpacityChange: (opacity: number) => void;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -32,6 +35,8 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
   zoom,
   opacity,
   onOpacityChange,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -47,9 +52,11 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 hooks
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   const {
@@ -87,6 +94,7 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
+      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 

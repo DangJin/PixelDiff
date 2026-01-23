@@ -11,6 +11,9 @@ interface VideoDiffProps {
   beforeVideo: string;
   afterVideo: string;
   zoom: number;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -28,6 +31,8 @@ export const VideoDiff: React.FC<VideoDiffProps> = ({
   beforeVideo,
   afterVideo,
   zoom,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -40,9 +45,11 @@ export const VideoDiff: React.FC<VideoDiffProps> = ({
   onAnnotationHover,
 }) => {
   // 使用共享的 hooks
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   const {
@@ -79,6 +86,7 @@ export const VideoDiff: React.FC<VideoDiffProps> = ({
       className="relative grid grid-cols-1 md:grid-cols-2 w-full h-full select-none"
       style={{ cursor: getCursor() }}
       onMouseDown={handleContainerMouseDown}
+      onWheel={handleWheel}
     >
       {/* Before Video */}
       <div className="relative flex items-center justify-center bg-md-surface-container-low overflow-hidden border-r border-md-outline-variant/30">

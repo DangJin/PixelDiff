@@ -55,6 +55,9 @@ interface SliderDiffProps {
   beforeSize?: ImageSize | null;
   afterSize?: ImageSize | null;
   hasTopTip?: boolean;
+  // 缩放相关
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -74,6 +77,8 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
   beforeSize,
   afterSize,
   hasTopTip = false,
+  onZoomIn,
+  onZoomOut,
   annotations,
   currentTool,
   currentColor,
@@ -90,9 +95,11 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, getCursor } = usePanZoom({
+  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
     zoom,
     currentTool,
+    onZoomIn,
+    onZoomOut,
   });
 
   const handleSliderMouseDown = useCallback(() => {
@@ -159,6 +166,7 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
         style={{ cursor: getCursor() }}
         ref={containerRef}
         onMouseDown={handleContainerMouseDown}
+        onWheel={handleWheel}
     >
        <CheckerboardBackground />
 

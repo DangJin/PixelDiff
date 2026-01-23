@@ -4,16 +4,19 @@ import type { AnnotationTool } from '../types/annotation';
 interface UsePanZoomOptions {
   zoom: number;
   currentTool: AnnotationTool;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
 }
 
 interface UsePanZoomReturn {
   isPanning: boolean;
   pan: { x: number; y: number };
   handleContainerMouseDown: (e: React.MouseEvent) => void;
+  handleWheel: (e: React.WheelEvent) => void;
   getCursor: () => 'crosshair' | 'grabbing' | 'grab' | 'default';
 }
 
-export const usePanZoom = ({ zoom, currentTool }: UsePanZoomOptions): UsePanZoomReturn => {
+export const usePanZoom = ({ zoom, currentTool, onZoomIn, onZoomOut }: UsePanZoomOptions): UsePanZoomReturn => {
   const [isPanning, setIsPanning] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
@@ -76,10 +79,24 @@ export const usePanZoom = ({ zoom, currentTool }: UsePanZoomOptions): UsePanZoom
     return 'default' as const;
   }, [isAnnotating, zoom, isPanning]);
 
+  // 处理滚轮缩放
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    // 阻止默认的页面滚动行为
+    e.preventDefault();
+
+    // deltaY < 0 表示滚轮向上，放大；deltaY > 0 表示滚轮向下，缩小
+    if (e.deltaY < 0) {
+      onZoomIn?.();
+    } else if (e.deltaY > 0) {
+      onZoomOut?.();
+    }
+  }, [onZoomIn, onZoomOut]);
+
   return {
     isPanning,
     pan,
     handleContainerMouseDown,
+    handleWheel,
     getCursor,
   };
 };

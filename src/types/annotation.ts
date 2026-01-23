@@ -1,8 +1,8 @@
-export type AnnotationTool = 'select' | 'arrow' | 'rect';
+export type AnnotationTool = 'select' | 'arrow' | 'rect' | 'circle';
 
 export interface BaseAnnotation {
   id: string;
-  type: 'arrow' | 'rect';
+  type: 'arrow' | 'rect' | 'circle';
   color: string;
 }
 
@@ -22,7 +22,14 @@ export interface RectAnnotation extends BaseAnnotation {
   height: number;
 }
 
-export type Annotation = ArrowAnnotation | RectAnnotation;
+export interface CircleAnnotation extends BaseAnnotation {
+  type: 'circle';
+  centerX: number;
+  centerY: number;
+  radius: number;
+}
+
+export type Annotation = ArrowAnnotation | RectAnnotation | CircleAnnotation;
 
 export const ANNOTATION_COLORS = [
   '#ef4444', // red

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, MoveRight, Square, Trash2 } from 'lucide-react';
+import { MousePointer2, MoveRight, Square, Circle, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { AnnotationTool } from '../../types/annotation';
 import { ANNOTATION_COLORS } from '../../types/annotation';
@@ -25,6 +25,7 @@ export const AnnotationToolbar: React.FC<AnnotationToolbarProps> = ({
     { tool: 'select', icon: MousePointer2, label: 'Select', shortcut: 'V' },
     { tool: 'arrow', icon: MoveRight, label: 'Arrow', shortcut: 'A' },
     { tool: 'rect', icon: Square, label: 'Rectangle', shortcut: 'R' },
+    { tool: 'circle', icon: Circle, label: 'Circle', shortcut: 'C' },
   ];
 
   return (

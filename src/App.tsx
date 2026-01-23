@@ -3,8 +3,10 @@ import { ImageDropzone } from './components/ImageDropzone';
 import { VideoDropzone } from './components/VideoDropzone';
 import { SliderDiff } from './components/DiffViewer/SliderDiff';
 import { SideBySideDiff } from './components/DiffViewer/SideBySideDiff';
+import { OverlayDiff } from './components/DiffViewer/OverlayDiff';
 import { VideoDiff } from './components/DiffViewer/VideoDiff';
 import { VideoSliderDiff } from './components/DiffViewer/VideoSliderDiff';
+import { VideoOverlayDiff } from './components/DiffViewer/VideoOverlayDiff';
 import { ZoomToolbar, ZOOM_STEP, MIN_ZOOM, MAX_ZOOM } from './components/DiffViewer/ZoomToolbar';
 import { AnnotationToolbar } from './components/Annotation/AnnotationToolbar';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
@@ -20,7 +22,7 @@ import { Button, IconButton } from './components/ui/Button';
 import { useRecentDiffs } from './hooks';
 
 type ContentMode = 'image' | 'video';
-type ViewMode = 'slider' | 'side-by-side';
+export type ViewMode = 'slider' | 'side-by-side' | 'overlay';
 
 interface ImageSize {
   width: number;
@@ -47,6 +49,7 @@ function App() {
 
   const [mode, setMode] = useState<ViewMode>('slider');
   const [zoom, setZoom] = useState(1);
+  const [overlayOpacity, setOverlayOpacity] = useState(0.5);
 
   // 标注状态
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -186,6 +189,10 @@ function App() {
         e.preventDefault();
         setPrimaryTool('rect');
         setCurrentTool('rect');
+      } else if (key === 'c') {
+        e.preventDefault();
+        setPrimaryTool('circle');
+        setCurrentTool('circle');
       }
     };
 
@@ -516,7 +523,7 @@ function App() {
                         onToolChange={setCurrentTool}
                         onAnnotationHover={handleAnnotationHover}
                       />
-                    ) : (
+                    ) : mode === 'side-by-side' ? (
                       <SideBySideDiff
                         beforeImage={beforeImage}
                         afterImage={afterImage}
@@ -524,6 +531,26 @@ function App() {
                         beforeSize={beforeSize}
                         afterSize={afterSize}
                         hasTopTip={!!sizeMismatch}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    ) : (
+                      <OverlayDiff
+                        beforeImage={beforeImage}
+                        afterImage={afterImage}
+                        zoom={zoom}
+                        beforeSize={beforeSize}
+                        afterSize={afterSize}
+                        hasTopTip={!!sizeMismatch}
+                        opacity={overlayOpacity}
+                        onOpacityChange={setOverlayOpacity}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -658,11 +685,29 @@ function App() {
                         onToolSelect={handleToolbarToolChange}
                         onAnnotationHover={handleAnnotationHover}
                       />
-                    ) : (
+                    ) : mode === 'side-by-side' ? (
                       <VideoDiff
                         beforeVideo={beforeVideo}
                         afterVideo={afterVideo}
                         zoom={zoom}
+                        annotations={annotations}
+                        currentTool={currentTool}
+                        currentColor={currentColor}
+                        selectedAnnotationId={selectedAnnotationId}
+                        onAnnotationAdd={handleAnnotationAdd}
+                        onAnnotationSelect={handleAnnotationSelectWithRestore}
+                        onDeleteSelected={handleDeleteSelected}
+                        onToolChange={setCurrentTool}
+                        onToolSelect={handleToolbarToolChange}
+                        onAnnotationHover={handleAnnotationHover}
+                      />
+                    ) : (
+                      <VideoOverlayDiff
+                        beforeVideo={beforeVideo}
+                        afterVideo={afterVideo}
+                        zoom={zoom}
+                        opacity={overlayOpacity}
+                        onOpacityChange={setOverlayOpacity}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -764,7 +809,7 @@ function App() {
       <ConfirmDialog
         isOpen={showModeConfirm}
         title="Switch View Mode"
-        message={`Switching to ${pendingMode === 'slider' ? 'Slider' : 'Side by Side'} mode will clear all annotations (${annotations.length}). Are you sure you want to continue?`}
+        message={`Switching to ${pendingMode === 'slider' ? 'Slider' : pendingMode === 'side-by-side' ? 'Side by Side' : 'Overlay'} mode will clear all annotations (${annotations.length}). Are you sure you want to continue?`}
         confirmText="Confirm"
         cancelText="Cancel"
         onConfirm={handleConfirmModeChange}

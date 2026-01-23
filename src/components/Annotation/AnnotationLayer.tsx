@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '../../utils/cn';
-import type { Annotation, AnnotationTool, ArrowAnnotation, RectAnnotation } from '../../types/annotation';
+import type { Annotation, AnnotationTool, ArrowAnnotation, RectAnnotation, CircleAnnotation } from '../../types/annotation';
 
 interface AnnotationLayerProps {
   annotations: Annotation[];
@@ -151,6 +151,17 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           height: Math.abs(pos.y - drawStart.y),
         };
         onAnnotationAdd(rect);
+      } else if (currentTool === 'circle') {
+        const radius = Math.sqrt(dx * dx + dy * dy);
+        const circle: CircleAnnotation = {
+          id: generateId(),
+          type: 'circle',
+          color: currentColor,
+          centerX: drawStart.x,
+          centerY: drawStart.y,
+          radius: radius,
+        };
+        onAnnotationAdd(circle);
       }
     };
 
@@ -193,7 +204,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   }, [currentTool, onAnnotationSelect]);
 
   // 判断是否是绘制模式
-  const isDrawingMode = currentTool === 'arrow' || currentTool === 'rect';
+  const isDrawingMode = currentTool === 'arrow' || currentTool === 'rect' || currentTool === 'circle';
 
   // 渲染箭头
   const renderArrow = (arrow: ArrowAnnotation, isSelected: boolean) => {
@@ -290,6 +301,45 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     );
   };
 
+  // 渲染圆形
+  const renderCircle = (circle: CircleAnnotation, isSelected: boolean) => {
+    return (
+      <g
+        key={circle.id}
+        onClick={(e) => handleAnnotationClick(e, circle.id)}
+        onMouseEnter={() => onAnnotationHover?.(true)}
+        onMouseLeave={() => onAnnotationHover?.(false)}
+        style={{ pointerEvents: 'auto' }}
+      >
+        {/* 选中时的边框 */}
+        {isSelected && (
+          <circle
+            cx={circle.centerX}
+            cy={circle.centerY}
+            r={circle.radius + 2 / zoom}
+            fill="none"
+            stroke="white"
+            strokeWidth={2 / zoom}
+            strokeDasharray={`${4 / zoom} ${4 / zoom}`}
+          />
+        )}
+        <circle
+          cx={circle.centerX}
+          cy={circle.centerY}
+          r={circle.radius}
+          fill={circle.color}
+          fillOpacity={0.3}
+          stroke={circle.color}
+          strokeWidth={2 / zoom}
+          className={cn(
+            "cursor-pointer transition-opacity",
+            currentTool === 'select' && "hover:opacity-70"
+          )}
+        />
+      </g>
+    );
+  };
+
   // 渲染正在绘制的标注
   const renderDrawing = () => {
     if (!isDrawing) return null;
@@ -316,6 +366,24 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           y={Math.min(drawStart.y, drawEnd.y)}
           width={Math.abs(drawEnd.x - drawStart.x)}
           height={Math.abs(drawEnd.y - drawStart.y)}
+          fill={currentColor}
+          fillOpacity={0.2}
+          stroke={currentColor}
+          strokeWidth={2 / zoom}
+          strokeDasharray={`${5 / zoom} ${5 / zoom}`}
+        />
+      );
+    }
+
+    if (currentTool === 'circle') {
+      const dx = drawEnd.x - drawStart.x;
+      const dy = drawEnd.y - drawStart.y;
+      const radius = Math.sqrt(dx * dx + dy * dy);
+      return (
+        <circle
+          cx={drawStart.x}
+          cy={drawStart.y}
+          r={radius}
           fill={currentColor}
           fillOpacity={0.2}
           stroke={currentColor}
@@ -356,6 +424,9 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           }
           if (ann.type === 'rect') {
             return renderRect(ann as RectAnnotation, isSelected);
+          }
+          if (ann.type === 'circle') {
+            return renderCircle(ann as CircleAnnotation, isSelected);
           }
           return null;
         })}

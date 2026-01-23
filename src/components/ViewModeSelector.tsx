@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { GitCompare, Columns } from 'lucide-react';
+import { GitCompare, Columns, Layers } from 'lucide-react';
 
-type ViewMode = 'slider' | 'side-by-side';
+type ViewMode = 'slider' | 'side-by-side' | 'overlay';
 
 interface ViewModeSelectorProps {
   value: ViewMode;
@@ -15,10 +15,11 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLButtonElement>(null);
   const sideBySideRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLButtonElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
-    const activeRef = value === 'slider' ? sliderRef : sideBySideRef;
+    const activeRef = value === 'slider' ? sliderRef : value === 'side-by-side' ? sideBySideRef : overlayRef;
     if (activeRef.current && containerRef.current) {
       const containerRect = containerRef.current.getBoundingClientRect();
       const activeRect = activeRef.current.getBoundingClientRect();
@@ -68,6 +69,19 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
       >
         <Columns size={16} />
         <span className="hidden sm:inline">Side by Side</span>
+      </button>
+      <button
+        ref={overlayRef}
+        onClick={() => onChange('overlay')}
+        className={`relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
+          value === 'overlay'
+            ? 'text-md-on-secondary-container'
+            : 'text-md-on-surface-variant hover:text-md-on-surface'
+        }`}
+        title="Overlay Mode"
+      >
+        <Layers size={16} />
+        <span className="hidden sm:inline">Overlay</span>
       </button>
     </div>
   );

@@ -404,7 +404,7 @@ function App() {
     <div className="h-screen bg-md-background text-md-on-background font-sans flex flex-col overflow-hidden">
       {/* Header - Top App Bar */}
       <header className="sticky top-0 z-50 bg-md-surface/80 backdrop-blur-md border-b border-md-outline-variant/50">
-        <div className="px-4 h-16 flex items-center justify-between">
+        <div className="px-4 h-16 flex items-center justify-between relative">
             {/* Leading Icon/Logo */}
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-md-primary-container text-md-on-primary-container rounded-full flex items-center justify-center">
@@ -414,13 +414,13 @@ function App() {
                 Pixel<span className="font-bold">Diff</span>
               </h1>
            </div>
-           
-           {/* Center Content - Compact View Mode Toggle */}
-           <div className="flex-1 flex justify-center">
-                {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && (
-                    <ViewModeSelector value={mode} onChange={handleModeChange} />
-                )}
-           </div>
+
+           {/* Center Content - Absolute positioned for true centering */}
+           {((contentMode === 'image' && hasBothImages) || (contentMode === 'video' && hasBothVideos)) && (
+             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+               <ViewModeSelector value={mode} onChange={handleModeChange} />
+             </div>
+           )}
 
            {/* Trailing Actions */}
            <div className="flex items-center gap-2">

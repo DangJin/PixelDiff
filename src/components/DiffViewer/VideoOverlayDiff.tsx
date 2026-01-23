@@ -165,8 +165,8 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
           disabled={!isAnnotating && currentTool === 'select'}
         />
 
-        {/* Opacity Slider - 底部（VideoControls 上方） */}
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant">
+        {/* Opacity Slider - 顶部 */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant">
           <span className="text-xs text-md-on-surface-variant font-medium whitespace-nowrap">
             Before
           </span>

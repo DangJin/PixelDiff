@@ -48,11 +48,10 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
   // Slider 状态
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 hooks
-  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
+  const { isPanning, pan, containerRef, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
     onZoomIn,
@@ -149,7 +148,6 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
-      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 

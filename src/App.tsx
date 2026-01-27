@@ -38,6 +38,8 @@ function App() {
   const [afterImage, setAfterImage] = useState<string | null>(null);
   const [beforeSize, setBeforeSize] = useState<ImageSize | null>(null);
   const [afterSize, setAfterSize] = useState<ImageSize | null>(null);
+  const [beforeFilename, setBeforeFilename] = useState<string | null>(null);
+  const [afterFilename, setAfterFilename] = useState<string | null>(null);
   const [beforeImageHandle, setBeforeImageHandle] = useState<FileSystemFileHandle | null>(null);
   const [afterImageHandle, setAfterImageHandle] = useState<FileSystemFileHandle | null>(null);
 
@@ -228,10 +230,12 @@ function App() {
     if (type === 'before') {
       if (beforeImage) URL.revokeObjectURL(beforeImage);
       setBeforeImage(url);
+      setBeforeFilename(file.name);
       setBeforeImageHandle(handle || null);
     } else {
       if (afterImage) URL.revokeObjectURL(afterImage);
       setAfterImage(url);
+      setAfterFilename(file.name);
       setAfterImageHandle(handle || null);
     }
   };
@@ -264,6 +268,8 @@ function App() {
       setAfterImage(null);
       setBeforeSize(null);
       setAfterSize(null);
+      setBeforeFilename(null);
+      setAfterFilename(null);
       setBeforeImageHandle(null);
       setAfterImageHandle(null);
     } else {
@@ -337,6 +343,8 @@ function App() {
       if (item.contentMode === 'image') {
         setBeforeImage(fileData.beforeUrl);
         setAfterImage(fileData.afterUrl);
+        setBeforeFilename(fileData.beforeName);
+        setAfterFilename(fileData.afterName);
         setBeforeImageHandle(fileData.beforeHandle);
         setAfterImageHandle(fileData.afterHandle);
         setBeforeVideo(null);
@@ -368,6 +376,8 @@ function App() {
         setAfterVideoHandle(fileData.afterHandle);
         setBeforeImage(null);
         setAfterImage(null);
+        setBeforeFilename(null);
+        setAfterFilename(null);
         setBeforeImageHandle(null);
         setAfterImageHandle(null);
         setBeforeSize(null);
@@ -390,14 +400,14 @@ function App() {
   useEffect(() => {
     if (contentMode === 'image' && hasBothImages && !hasAddedToRecent.current) {
       hasAddedToRecent.current = true;
-      addRecentDiff('image', beforeImage, afterImage, beforeImageHandle || undefined, afterImageHandle || undefined);
+      addRecentDiff('image', beforeImage, afterImage, beforeImageHandle || undefined, afterImageHandle || undefined, beforeFilename || undefined, afterFilename || undefined);
     } else if (contentMode === 'video' && hasBothVideos && !hasAddedToRecent.current) {
       hasAddedToRecent.current = true;
       addRecentDiff('video', beforeVideo, afterVideo, beforeVideoHandle || undefined, afterVideoHandle || undefined);
     } else if (!hasBothImages && !hasBothVideos) {
       hasAddedToRecent.current = false;
     }
-  }, [contentMode, hasBothImages, hasBothVideos, beforeImage, afterImage, beforeVideo, afterVideo, beforeImageHandle, afterImageHandle, beforeVideoHandle, afterVideoHandle, addRecentDiff]);
+  }, [contentMode, hasBothImages, hasBothVideos, beforeImage, afterImage, beforeVideo, afterVideo, beforeImageHandle, afterImageHandle, beforeVideoHandle, afterVideoHandle, beforeFilename, afterFilename, addRecentDiff]);
 
   // 检测尺寸是否不同
   const sizeMismatch = beforeSize && afterSize &&
@@ -512,6 +522,8 @@ function App() {
                         zoom={zoom}
                         beforeSize={beforeSize}
                         afterSize={afterSize}
+                        beforeFilename={beforeFilename || undefined}
+                        afterFilename={afterFilename || undefined}
                         hasTopTip={!!sizeMismatch}
                         onZoomIn={handleZoomIn}
                         onZoomOut={handleZoomOut}
@@ -532,6 +544,8 @@ function App() {
                         zoom={zoom}
                         beforeSize={beforeSize}
                         afterSize={afterSize}
+                        beforeFilename={beforeFilename || undefined}
+                        afterFilename={afterFilename || undefined}
                         hasTopTip={!!sizeMismatch}
                         onZoomIn={handleZoomIn}
                         onZoomOut={handleZoomOut}
@@ -552,6 +566,8 @@ function App() {
                         zoom={zoom}
                         beforeSize={beforeSize}
                         afterSize={afterSize}
+                        beforeFilename={beforeFilename || undefined}
+                        afterFilename={afterFilename || undefined}
                         hasTopTip={!!sizeMismatch}
                         opacity={overlayOpacity}
                         onOpacityChange={setOverlayOpacity}
@@ -633,6 +649,7 @@ function App() {
                           if (beforeImage) URL.revokeObjectURL(beforeImage);
                           setBeforeImage(null);
                           setBeforeSize(null);
+                          setBeforeFilename(null);
                           setBeforeImageHandle(null);
                       }}
                       className="shadow-md-1 hover:shadow-md-3"
@@ -645,6 +662,7 @@ function App() {
                           if (afterImage) URL.revokeObjectURL(afterImage);
                           setAfterImage(null);
                           setAfterSize(null);
+                          setAfterFilename(null);
                           setAfterImageHandle(null);
                       }}
                       className="shadow-md-1 hover:shadow-md-3"

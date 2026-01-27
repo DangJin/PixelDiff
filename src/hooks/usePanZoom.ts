@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { AnnotationTool } from '../types/annotation';
 
 interface UsePanZoomOptions {
@@ -11,8 +11,8 @@ interface UsePanZoomOptions {
 interface UsePanZoomReturn {
   isPanning: boolean;
   pan: { x: number; y: number };
+  containerRef: React.RefObject<HTMLDivElement | null>;
   handleContainerMouseDown: (e: React.MouseEvent) => void;
-  handleWheel: (e: React.WheelEvent) => void;
   getCursor: () => 'crosshair' | 'grabbing' | 'grab' | 'default';
 }
 
@@ -20,6 +20,15 @@ export const usePanZoom = ({ zoom, currentTool, onZoomIn, onZoomOut }: UsePanZoo
   const [isPanning, setIsPanning] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const onZoomInRef = useRef(onZoomIn);
+  const onZoomOutRef = useRef(onZoomOut);
+
+  // 更新 ref 以保持最新的回调
+  useEffect(() => {
+    onZoomInRef.current = onZoomIn;
+    onZoomOutRef.current = onZoomOut;
+  }, [onZoomIn, onZoomOut]);
 
   // 当 zoom 重置为 1 时，重置平移位置
   useEffect(() => {
@@ -79,24 +88,36 @@ export const usePanZoom = ({ zoom, currentTool, onZoomIn, onZoomOut }: UsePanZoo
     return 'default' as const;
   }, [isAnnotating, zoom, isPanning]);
 
-  // 处理滚轮缩放
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    // 阻止默认的页面滚动行为
-    e.preventDefault();
+  // 使用 useEffect 添加 non-passive 的 wheel 事件监听器，避免 passive 警告
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    // deltaY < 0 表示滚轮向上，放大；deltaY > 0 表示滚轮向下，缩小
-    if (e.deltaY < 0) {
-      onZoomIn?.();
-    } else if (e.deltaY > 0) {
-      onZoomOut?.();
-    }
-  }, [onZoomIn, onZoomOut]);
+    const handleWheel = (e: WheelEvent) => {
+      // 阻止默认的页面滚动行为
+      e.preventDefault();
+
+      // deltaY < 0 表示滚轮向上，放大；deltaY > 0 表示滚轮向下，缩小
+      if (e.deltaY < 0) {
+        onZoomInRef.current?.();
+      } else if (e.deltaY > 0) {
+        onZoomOutRef.current?.();
+      }
+    };
+
+    // 使用 { passive: false } 以允许 preventDefault
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   return {
     isPanning,
     pan,
+    containerRef,
     handleContainerMouseDown,
-    handleWheel,
     getCursor,
   };
 };

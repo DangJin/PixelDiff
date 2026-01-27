@@ -17,6 +17,8 @@ interface SideBySideDiffProps {
   zoom: number;
   beforeSize?: ImageSize | null;
   afterSize?: ImageSize | null;
+  beforeFilename?: string;
+  afterFilename?: string;
   hasTopTip?: boolean;
   // 缩放相关
   onZoomIn?: () => void;
@@ -39,6 +41,8 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   zoom,
   beforeSize,
   afterSize,
+  beforeFilename,
+  afterFilename,
   hasTopTip = false,
   onZoomIn,
   onZoomOut,
@@ -53,7 +57,7 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
   onAnnotationHover,
 }) => {
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
+  const { isPanning, pan, containerRef, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
     onZoomIn,
@@ -65,13 +69,13 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         "relative grid grid-cols-1 md:grid-cols-2 w-full h-full select-none",
         hasTopTip && "pt-10"
       )}
       style={{ cursor: getCursor() }}
       onMouseDown={handleContainerMouseDown}
-      onWheel={handleWheel}
     >
       {/* Before 区域 */}
       <div className="relative flex items-center justify-center bg-md-surface-container-low overflow-hidden border-r border-md-outline-variant/30">
@@ -91,6 +95,7 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
           label="Before"
           width={beforeSize?.width}
           height={beforeSize?.height}
+          filename={beforeFilename}
         />
         {/* Before 区域的标注层 */}
         <AnnotationLayer
@@ -127,6 +132,7 @@ export const SideBySideDiff: React.FC<SideBySideDiffProps> = ({
           label="After"
           width={afterSize?.width}
           height={afterSize?.height}
+          filename={afterFilename}
         />
         {/* After 区域的标注层 - 允许绘制和选择 */}
         <AnnotationLayer

@@ -254,6 +254,8 @@ export const useRecentDiffs = () => {
     afterUrl: string;
     beforeHandle: FileSystemFileHandle;
     afterHandle: FileSystemFileHandle;
+    beforeName: string;
+    afterName: string;
   } | null> => {
     try {
       const handles = await loadHandlesFromDB(id);
@@ -280,6 +282,8 @@ export const useRecentDiffs = () => {
         afterUrl,
         beforeHandle: handles.beforeHandle,
         afterHandle: handles.afterHandle,
+        beforeName: beforeFile.name,
+        afterName: afterFile.name,
       };
     } catch (e) {
       console.error('Failed to load file data:', e);

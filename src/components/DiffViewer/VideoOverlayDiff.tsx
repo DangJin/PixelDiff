@@ -48,11 +48,10 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
   onToolSelect,
   onAnnotationHover,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 hooks
-  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
+  const { isPanning, pan, containerRef, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
     onZoomIn,
@@ -94,7 +93,6 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
-      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 
@@ -166,7 +164,10 @@ export const VideoOverlayDiff: React.FC<VideoOverlayDiffProps> = ({
         />
 
         {/* Opacity Slider - 顶部 */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant">
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <span className="text-xs text-md-on-surface-variant font-medium whitespace-nowrap">
             Before
           </span>

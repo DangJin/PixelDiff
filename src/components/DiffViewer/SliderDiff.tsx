@@ -54,6 +54,8 @@ interface SliderDiffProps {
   zoom: number;
   beforeSize?: ImageSize | null;
   afterSize?: ImageSize | null;
+  beforeFilename?: string;
+  afterFilename?: string;
   hasTopTip?: boolean;
   // 缩放相关
   onZoomIn?: () => void;
@@ -76,6 +78,8 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
   zoom,
   beforeSize,
   afterSize,
+  beforeFilename,
+  afterFilename,
   hasTopTip = false,
   onZoomIn,
   onZoomOut,
@@ -91,11 +95,10 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
 }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
+  const { isPanning, pan, containerRef, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
     onZoomIn,
@@ -166,7 +169,6 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
         style={{ cursor: getCursor() }}
         ref={containerRef}
         onMouseDown={handleContainerMouseDown}
-        onWheel={handleWheel}
     >
        <CheckerboardBackground />
 
@@ -213,6 +215,7 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
           hasTopTip={hasTopTip}
           width={beforeSize?.width}
           height={beforeSize?.height}
+          filename={beforeFilename}
         />
         <DiffLabel
           label="After"
@@ -220,6 +223,7 @@ export const SliderDiff: React.FC<SliderDiffProps> = ({
           hasTopTip={hasTopTip}
           width={afterSize?.width}
           height={afterSize?.height}
+          filename={afterFilename}
         />
 
         {/* Annotation Layer - z-10 */}

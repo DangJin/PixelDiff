@@ -17,6 +17,8 @@ interface OverlayDiffProps {
   zoom: number;
   beforeSize?: ImageSize | null;
   afterSize?: ImageSize | null;
+  beforeFilename?: string;
+  afterFilename?: string;
   hasTopTip?: boolean;
   opacity: number;
   onOpacityChange: (opacity: number) => void;
@@ -41,6 +43,8 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
   zoom,
   beforeSize,
   afterSize,
+  beforeFilename,
+  afterFilename,
   hasTopTip = false,
   opacity,
   onOpacityChange,
@@ -56,11 +60,10 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
   onToolChange,
   onAnnotationHover,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // 使用共享的 pan/zoom hook
-  const { isPanning, pan, handleContainerMouseDown, handleWheel, getCursor } = usePanZoom({
+  const { isPanning, pan, containerRef, handleContainerMouseDown, getCursor } = usePanZoom({
     zoom,
     currentTool,
     onZoomIn,
@@ -78,7 +81,6 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
       style={{ cursor: getCursor() }}
       ref={containerRef}
       onMouseDown={handleContainerMouseDown}
-      onWheel={handleWheel}
     >
       <CheckerboardBackground />
 
@@ -124,6 +126,7 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
           hasTopTip={hasTopTip}
           width={beforeSize?.width}
           height={beforeSize?.height}
+          filename={beforeFilename}
         />
         <DiffLabel
           label="After"
@@ -131,6 +134,7 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
           hasTopTip={hasTopTip}
           width={afterSize?.width}
           height={afterSize?.height}
+          filename={afterFilename}
         />
 
         {/* Annotation Layer - z-10 */}
@@ -150,7 +154,10 @@ export const OverlayDiff: React.FC<OverlayDiffProps> = ({
         />
 
         {/* Opacity Slider - 顶部 */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant">
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-md-surface/95 backdrop-blur-md rounded-full px-4 py-2 shadow-md-2 border border-md-outline-variant"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <span className="text-xs text-md-on-surface-variant font-medium whitespace-nowrap">
             Before
           </span>

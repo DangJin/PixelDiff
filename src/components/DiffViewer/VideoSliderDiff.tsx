@@ -8,6 +8,12 @@ import { DiffLabel } from './DiffLabel';
 import { SliderHandle } from './SliderHandle';
 import { CheckerboardBackground } from './CheckerboardBackground';
 
+interface VideoPlaybackState {
+  isPlaying: boolean;
+  currentTime: number;
+  playbackRate: number;
+}
+
 interface VideoSliderDiffProps {
   beforeVideo: string;
   afterVideo: string;
@@ -15,6 +21,9 @@ interface VideoSliderDiffProps {
   // 缩放相关
   onZoomIn?: () => void;
   onZoomOut?: () => void;
+  // 视频播放状态（跨模式共享）
+  videoPlaybackState?: VideoPlaybackState;
+  onVideoPlaybackStateChange?: (state: VideoPlaybackState) => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -34,6 +43,8 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
   zoom,
   onZoomIn,
   onZoomOut,
+  videoPlaybackState,
+  onVideoPlaybackStateChange,
   annotations,
   currentTool,
   currentColor,
@@ -72,7 +83,12 @@ export const VideoSliderDiff: React.FC<VideoSliderDiffProps> = ({
     handleSeek,
     handleStepFrame,
     handlePlaybackRateChange,
-  } = useVideoPlayback({ beforeVideo, afterVideo });
+  } = useVideoPlayback({
+    beforeVideo,
+    afterVideo,
+    externalState: videoPlaybackState,
+    onStateChange: onVideoPlaybackStateChange,
+  });
 
   // 使用共享的键盘快捷键
   useKeyboardShortcuts({

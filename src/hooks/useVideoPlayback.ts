@@ -5,6 +5,13 @@ const FRAME_DURATION = 1 / 30; // 固定 30fps 用于帧步进
 interface UseVideoPlaybackOptions {
   beforeVideo: string;
   afterVideo: string;
+  // 外部状态同步（用于模式切换时保持播放进度）
+  externalState?: {
+    isPlaying: boolean;
+    currentTime: number;
+    playbackRate: number;
+  };
+  onStateChange?: (state: { isPlaying: boolean; currentTime: number; playbackRate: number }) => void;
 }
 
 interface VideoInfo {
@@ -31,14 +38,19 @@ interface UseVideoPlaybackReturn {
 export const useVideoPlayback = ({
   beforeVideo,
   afterVideo,
+  externalState,
+  onStateChange,
 }: UseVideoPlaybackOptions): UseVideoPlaybackReturn => {
   const beforeVideoRef = useRef<HTMLVideoElement>(null);
   const afterVideoRef = useRef<HTMLVideoElement>(null);
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(externalState?.isPlaying ?? false);
+  const [currentTime, setCurrentTime] = useState(externalState?.currentTime ?? 0);
   const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(externalState?.playbackRate ?? 1);
+
+  // 标记是否已经恢复了外部状态
+  const hasRestoredState = useRef(false);
 
   // 视频信息
   const [beforeInfo, setBeforeInfo] = useState<VideoInfo | null>(null);
@@ -49,15 +61,17 @@ export const useVideoPlayback = ({
     const before = beforeVideoRef.current;
     const after = afterVideoRef.current;
 
-    if (isPlaying) {
-      before?.pause();
-      after?.pause();
-    } else {
+    const newIsPlaying = !isPlaying;
+    if (newIsPlaying) {
       before?.play();
       after?.play();
+    } else {
+      before?.pause();
+      after?.pause();
     }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying]);
+    setIsPlaying(newIsPlaying);
+    onStateChange?.({ isPlaying: newIsPlaying, currentTime, playbackRate });
+  }, [isPlaying, currentTime, playbackRate, onStateChange]);
 
   // 同步 seek
   const handleSeek = useCallback((time: number) => {
@@ -65,7 +79,8 @@ export const useVideoPlayback = ({
     if (beforeVideoRef.current) beforeVideoRef.current.currentTime = clampedTime;
     if (afterVideoRef.current) afterVideoRef.current.currentTime = clampedTime;
     setCurrentTime(clampedTime);
-  }, [duration]);
+    onStateChange?.({ isPlaying, currentTime: clampedTime, playbackRate });
+  }, [duration, isPlaying, playbackRate, onStateChange]);
 
   // 帧步进
   const handleStepFrame = useCallback((direction: 1 | -1) => {
@@ -78,7 +93,8 @@ export const useVideoPlayback = ({
     setPlaybackRate(rate);
     if (beforeVideoRef.current) beforeVideoRef.current.playbackRate = rate;
     if (afterVideoRef.current) afterVideoRef.current.playbackRate = rate;
-  }, []);
+    onStateChange?.({ isPlaying, currentTime, playbackRate: rate });
+  }, [isPlaying, currentTime, onStateChange]);
 
   // 监听视频元数据加载
   useEffect(() => {
@@ -90,6 +106,7 @@ export const useVideoPlayback = ({
         setBeforeInfo({ width: before.videoWidth, height: before.videoHeight });
       }
       updateDuration();
+      restoreExternalState();
     };
 
     const handleAfterLoadedMetadata = () => {
@@ -97,6 +114,7 @@ export const useVideoPlayback = ({
         setAfterInfo({ width: after.videoWidth, height: after.videoHeight });
       }
       updateDuration();
+      restoreExternalState();
     };
 
     const updateDuration = () => {
@@ -105,14 +123,53 @@ export const useVideoPlayback = ({
       setDuration(Math.min(beforeDuration, afterDuration) || beforeDuration || afterDuration);
     };
 
+    // 恢复外部状态（模式切换时保持播放进度）
+    const restoreExternalState = () => {
+      if (hasRestoredState.current || !externalState) return;
+
+      const before = beforeVideoRef.current;
+      const after = afterVideoRef.current;
+
+      // 确保两个视频都已加载
+      if (!before || !after || !before.duration || !after.duration) return;
+
+      hasRestoredState.current = true;
+
+      // 恢复播放位置
+      if (externalState.currentTime > 0) {
+        before.currentTime = externalState.currentTime;
+        after.currentTime = externalState.currentTime;
+        setCurrentTime(externalState.currentTime);
+      }
+
+      // 恢复播放速度
+      if (externalState.playbackRate !== 1) {
+        before.playbackRate = externalState.playbackRate;
+        after.playbackRate = externalState.playbackRate;
+        setPlaybackRate(externalState.playbackRate);
+      }
+
+      // 恢复播放状态
+      if (externalState.isPlaying) {
+        before.play();
+        after.play();
+        setIsPlaying(true);
+      }
+    };
+
     before?.addEventListener('loadedmetadata', handleBeforeLoadedMetadata);
     after?.addEventListener('loadedmetadata', handleAfterLoadedMetadata);
+
+    // 如果视频已经加载过元数据，直接尝试恢复
+    if (before?.duration && after?.duration) {
+      restoreExternalState();
+    }
 
     return () => {
       before?.removeEventListener('loadedmetadata', handleBeforeLoadedMetadata);
       after?.removeEventListener('loadedmetadata', handleAfterLoadedMetadata);
     };
-  }, [beforeVideo, afterVideo]);
+  }, [beforeVideo, afterVideo, externalState]);
 
   // 监听时间更新
   useEffect(() => {

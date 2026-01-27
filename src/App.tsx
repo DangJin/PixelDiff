@@ -49,6 +49,13 @@ function App() {
   const [beforeVideoHandle, setBeforeVideoHandle] = useState<FileSystemFileHandle | null>(null);
   const [afterVideoHandle, setAfterVideoHandle] = useState<FileSystemFileHandle | null>(null);
 
+  // 视频播放状态（跨模式共享）
+  const [videoPlaybackState, setVideoPlaybackState] = useState({
+    isPlaying: false,
+    currentTime: 0,
+    playbackRate: 1,
+  });
+
   const [mode, setMode] = useState<ViewMode>('slider');
   const [zoom, setZoom] = useState(1);
   const [overlayOpacity, setOverlayOpacity] = useState(0.5);
@@ -279,6 +286,8 @@ function App() {
       setAfterVideo(null);
       setBeforeVideoHandle(null);
       setAfterVideoHandle(null);
+      // 重置视频播放状态
+      setVideoPlaybackState({ isPlaying: false, currentTime: 0, playbackRate: 1 });
     }
     // 清除标注
     setAnnotations([]);
@@ -700,6 +709,8 @@ function App() {
                         zoom={zoom}
                         onZoomIn={handleZoomIn}
                         onZoomOut={handleZoomOut}
+                        videoPlaybackState={videoPlaybackState}
+                        onVideoPlaybackStateChange={setVideoPlaybackState}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -718,6 +729,8 @@ function App() {
                         zoom={zoom}
                         onZoomIn={handleZoomIn}
                         onZoomOut={handleZoomOut}
+                        videoPlaybackState={videoPlaybackState}
+                        onVideoPlaybackStateChange={setVideoPlaybackState}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -738,6 +751,8 @@ function App() {
                         onOpacityChange={setOverlayOpacity}
                         onZoomIn={handleZoomIn}
                         onZoomOut={handleZoomOut}
+                        videoPlaybackState={videoPlaybackState}
+                        onVideoPlaybackStateChange={setVideoPlaybackState}
                         annotations={annotations}
                         currentTool={currentTool}
                         currentColor={currentColor}
@@ -801,6 +816,7 @@ function App() {
                           if (beforeVideo) URL.revokeObjectURL(beforeVideo);
                           setBeforeVideo(null);
                           setBeforeVideoHandle(null);
+                          setVideoPlaybackState({ isPlaying: false, currentTime: 0, playbackRate: 1 });
                       }}
                       className="shadow-md-1 hover:shadow-md-3"
                     />
@@ -812,6 +828,7 @@ function App() {
                           if (afterVideo) URL.revokeObjectURL(afterVideo);
                           setAfterVideo(null);
                           setAfterVideoHandle(null);
+                          setVideoPlaybackState({ isPlaying: false, currentTime: 0, playbackRate: 1 });
                       }}
                       className="shadow-md-1 hover:shadow-md-3"
                     />

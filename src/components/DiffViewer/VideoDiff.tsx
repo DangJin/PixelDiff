@@ -7,6 +7,12 @@ import { usePanZoom, useVideoPlayback, useKeyboardShortcuts } from '../../hooks'
 import { DiffLabel } from './DiffLabel';
 import { CheckerboardBackground } from './CheckerboardBackground';
 
+interface VideoPlaybackState {
+  isPlaying: boolean;
+  currentTime: number;
+  playbackRate: number;
+}
+
 interface VideoDiffProps {
   beforeVideo: string;
   afterVideo: string;
@@ -14,6 +20,9 @@ interface VideoDiffProps {
   // 缩放相关
   onZoomIn?: () => void;
   onZoomOut?: () => void;
+  // 视频播放状态（跨模式共享）
+  videoPlaybackState?: VideoPlaybackState;
+  onVideoPlaybackStateChange?: (state: VideoPlaybackState) => void;
   // 标注相关
   annotations: Annotation[];
   currentTool: AnnotationTool;
@@ -33,6 +42,8 @@ export const VideoDiff: React.FC<VideoDiffProps> = ({
   zoom,
   onZoomIn,
   onZoomOut,
+  videoPlaybackState,
+  onVideoPlaybackStateChange,
   annotations,
   currentTool,
   currentColor,
@@ -66,7 +77,12 @@ export const VideoDiff: React.FC<VideoDiffProps> = ({
     handleSeek,
     handleStepFrame,
     handlePlaybackRateChange,
-  } = useVideoPlayback({ beforeVideo, afterVideo });
+  } = useVideoPlayback({
+    beforeVideo,
+    afterVideo,
+    externalState: videoPlaybackState,
+    onStateChange: onVideoPlaybackStateChange,
+  });
 
   // 使用共享的键盘快捷键
   useKeyboardShortcuts({
